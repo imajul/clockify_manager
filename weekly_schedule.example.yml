@@ -1,96 +1,110 @@
 # Weekly schedule for automatic Clockify uploads
-# Copy this file to weekly_schedule.yml and customize it.
+# Copy to weekly_schedule.yml and customize with your real projects and clients.
 #
-# The script uses this file when you run the "weekly" workflow.
 # Times are interpreted in the specified timezone and converted to UTC automatically.
 
 timezone: "America/Argentina/Buenos_Aires"
 
 # ── Default schedule ───────────────────────────────────────────────────────────
 # Applied every week unless a specific week overrides a day.
-# Omit a day entirely (or set it to []) to mark it as a day off.
+# Omit a day or set it to [] to mark it as a day off.
 
 default:
   monday:
     - start: "09:00"
       end: "13:00"
       description: "Desarrollo"
-      project: "Proyecto A"
+      project: "PSLMO"
+      client: "O&M"         # narrows the project lookup when the name is shared across clients
       billable: true
+      tags:
+        - "Desarrollo"
+        - "Backend"
+
     - start: "14:00"
       end: "18:00"
-      description: "Reuniones y planificación"
-      project: "Proyecto B"
-      billable: false
+      description: "Relevamiento"
+      project: "PSLMO"
+      client: "DPI"
+      billable: true
+      tags:
+        - "Relevamiento"
 
   tuesday:
     - start: "09:00"
       end: "18:00"
       description: "Desarrollo"
-      project: "Proyecto A"
+      project: "PSLMO"
+      client: "O&M"
       billable: true
+      tags:
+        - "Desarrollo"
 
   wednesday:
     - start: "09:00"
       end: "13:00"
       description: "Desarrollo"
-      project: "Proyecto A"
+      project: "PSLMO"
+      client: "O&M"
       billable: true
+      tags:
+        - "Desarrollo"
+
     - start: "14:00"
-      end: "17:00"
-      description: "Code review"
-      project: "Proyecto A"
-      billable: true
+      end: "18:00"
+      description: "Reuniones y planificación"
+      project: "PSLMO"
+      client: "DPI"
+      billable: false
+      tags:
+        - "Gestión"
 
   thursday:
     - start: "09:00"
       end: "18:00"
       description: "Desarrollo"
-      project: "Proyecto B"
+      project: "PSLMO"
+      client: "O&M"
       billable: true
+      tags:
+        - "Desarrollo"
+        - "Backend"
 
   friday:
     - start: "09:00"
       end: "13:00"
       description: "Desarrollo"
-      project: "Proyecto A"
+      project: "PSLMO"
+      client: "O&M"
       billable: true
+      tags:
+        - "Desarrollo"
+
     - start: "14:00"
       end: "16:00"
-      description: "Retrospectiva y cierre de semana"
-      project: "Proyecto B"
+      description: "Cierre de semana"
+      project: "PSLMO"
+      client: "DPI"
       billable: false
-
-  # saturday: []   # descomentá para marcar sábado como día libre explícitamente
-  # sunday: []     # el domingo no aparece en default, así que ya se ignora
+      tags:
+        - "Gestión"
 
 
 # ── Overrides por semana ───────────────────────────────────────────────────────
-# Para semanas que se desvían del default.
-# Solo listá los días que cambian — el resto usa el default.
+# Solo listá los días que cambian respecto al default.
 # Clave: lunes de la semana en formato YYYY-MM-DD.
 
 weeks:
-  "2026-05-04":
-    # Ejemplo: semana con feriado el miércoles y cambio de proyecto el viernes
-    wednesday: []   # feriado — se saltea el día completo
+  "2026-05-11":
+    wednesday: []    # feriado
+
     friday:
       - start: "09:00"
         end: "14:00"
         description: "Entrega sprint"
-        project: "Proyecto C"
+        project: "PSLMO"
+        client: "DPI"
         billable: true
-
-  "2026-05-11":
-    # Ejemplo: semana con horas extras el lunes
-    monday:
-      - start: "08:00"
-        end: "13:00"
-        description: "Desarrollo"
-        project: "Proyecto A"
-        billable: true
-      - start: "14:00"
-        end: "19:00"
-        description: "Deploy y soporte"
-        project: "Proyecto A"
-        billable: true
+        tags:
+          - "Desarrollo"
+          - "Entrega"

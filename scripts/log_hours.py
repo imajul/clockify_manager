@@ -38,19 +38,78 @@ def get_workspace_id(api_key: str, workspace_id: str | None) -> str:
     return workspaces[0]["id"]
 
 
-def find_project_id(api_key: str, workspace_id: str, project_name: str) -> str:
+# ── Cached lookups ─────────────────────────────────────────────────────────────
+# Avoid repeated API calls for the same project/client/tag within a batch.
+
+_client_cache: dict[str, str] = {}   # name → id
+_project_cache: dict[str, str] = {}  # "name|client_id" → id
+_tag_cache: dict[str, str] = {}      # name → id
+
+
+def find_client_id(api_key: str, workspace_id: str, client_name: str) -> str:
+    key = client_name.lower()
+    if key in _client_cache:
+        return _client_cache[key]
+    resp = requests.get(
+        f"{CLOCKIFY_API_BASE}/workspaces/{workspace_id}/clients",
+        headers=get_headers(api_key),
+        params={"name": client_name},
+    )
+    resp.raise_for_status()
+    for c in resp.json():
+        if c["name"].lower() == key:
+            _client_cache[key] = c["id"]
+            return c["id"]
+    sys.exit(f"Client '{client_name}' not found in Clockify.")
+
+
+def find_project_id(
+    api_key: str,
+    workspace_id: str,
+    project_name: str,
+    client_name: str | None = None,
+) -> str:
+    client_id = find_client_id(api_key, workspace_id, client_name) if client_name else None
+    cache_key = f"{project_name.lower()}|{client_id or ''}"
+    if cache_key in _project_cache:
+        return _project_cache[cache_key]
+
+    params: dict = {"name": project_name, "archived": False}
+    if client_id:
+        params["clients"] = client_id
+
     resp = requests.get(
         f"{CLOCKIFY_API_BASE}/workspaces/{workspace_id}/projects",
         headers=get_headers(api_key),
-        params={"name": project_name, "archived": False},
+        params=params,
     )
     resp.raise_for_status()
-    projects = resp.json()
-    for p in projects:
+    for p in resp.json():
         if p["name"].lower() == project_name.lower():
+            _project_cache[cache_key] = p["id"]
             return p["id"]
-    available = [p["name"] for p in projects]
-    sys.exit(f"Project '{project_name}' not found. Available: {available}")
+
+    suffix = f" (client: {client_name})" if client_name else ""
+    sys.exit(f"Project '{project_name}'{suffix} not found in Clockify.")
+
+
+def find_tag_ids(api_key: str, workspace_id: str, tag_names: list[str]) -> list[str]:
+    ids = []
+    for name in tag_names:
+        key = name.lower()
+        if key not in _tag_cache:
+            resp = requests.get(
+                f"{CLOCKIFY_API_BASE}/workspaces/{workspace_id}/tags",
+                headers=get_headers(api_key),
+                params={"name": name},
+            )
+            resp.raise_for_status()
+            matched = [t for t in resp.json() if t["name"].lower() == key]
+            if not matched:
+                sys.exit(f"Tag '{name}' not found in Clockify.")
+            _tag_cache[key] = matched[0]["id"]
+        ids.append(_tag_cache[key])
+    return ids
 
 
 def create_entry(
@@ -81,7 +140,6 @@ def create_entry(
 # ── Datetime helpers ───────────────────────────────────────────────────────────
 
 def to_utc(date_obj: date, time_str: str, tz_name: str = "UTC") -> str:
-    """Convert a local date+time string to ISO 8601 UTC."""
     try:
         tz = ZoneInfo(tz_name)
     except ZoneInfoNotFoundError:
@@ -98,7 +156,6 @@ def hours_between(start_iso: str, end_iso: str) -> float:
 
 
 def week_monday(week_str: str | None) -> date:
-    """Return the Monday of the requested week. Defaults to current week."""
     if week_str:
         d = datetime.strptime(week_str, "%Y-%m-%d").date()
         return d - timedelta(days=d.weekday())
@@ -124,10 +181,19 @@ def process_entry(
     start_iso = to_utc(date_obj, entry["start"], tz_name)
     end_iso = to_utc(date_obj, entry["end"], tz_name)
     duration = hours_between(start_iso, end_iso)
+
+    project_label = entry.get("project", "—")
+    if client := entry.get("client"):
+        project_label = f"{project_label} [{client}]"
+
+    tag_label = ""
+    if tags := entry.get("tags"):
+        tag_label = f" | tags={','.join(tags)}"
+
     label = (
         f"  {'[DRY]' if dry_run else '[OK] '} "
         f"{date_str} {entry['start']}-{entry['end']} ({duration:.1f}h) "
-        f"| {entry.get('description', '')} | project={entry.get('project', '—')}"
+        f"| {entry.get('description', '')} | project={project_label}{tag_label}"
     )
 
     if dry_run:
@@ -136,9 +202,16 @@ def process_entry(
 
     project_id = None
     if project_name := entry.get("project"):
-        project_id = find_project_id(api_key, workspace_id, project_name)
+        project_id = find_project_id(
+            api_key, workspace_id, project_name, client_name=entry.get("client")
+        )
     elif pid := entry.get("project_id"):
         project_id = pid
+
+    # Resolve tag names to IDs (merge with any explicit tag_ids)
+    resolved_tag_ids: list[str] = list(entry.get("tag_ids") or [])
+    if tag_names := entry.get("tags"):
+        resolved_tag_ids += find_tag_ids(api_key, workspace_id, tag_names)
 
     result = create_entry(
         api_key=api_key,
@@ -148,7 +221,7 @@ def process_entry(
         end=end_iso,
         project_id=project_id,
         billable=entry.get("billable", False),
-        tag_ids=entry.get("tag_ids"),
+        tag_ids=resolved_tag_ids or None,
     )
     print(f"{label} | id={result['id']}")
 
@@ -174,12 +247,6 @@ def run_entries(
 # ── Weekly schedule builder ────────────────────────────────────────────────────
 
 def build_weekly_entries(schedule_data: dict, monday: date) -> list[dict]:
-    """
-    Expand the schedule into concrete entries for the week starting on `monday`.
-
-    Priority: weeks[YYYY-MM-DD][day] > default[day]
-    A day set to an empty list ([]) means day off — skip it.
-    """
     default_days: dict = schedule_data.get("default", {})
     week_key = monday.isoformat()
     week_override: dict = schedule_data.get("weeks", {}).get(week_key, {})
@@ -195,7 +262,7 @@ def build_weekly_entries(schedule_data: dict, monday: date) -> list[dict]:
         else:
             continue
 
-        if not day_entries:  # explicit empty list = day off
+        if not day_entries:
             continue
 
         for slot in day_entries:
@@ -220,20 +287,22 @@ def main() -> None:
     single.add_argument("--end", required=True, help="HH:MM")
     single.add_argument("--description", required=True)
     single.add_argument("--project")
+    single.add_argument("--client", help="Client name to disambiguate project")
     single.add_argument("--project-id")
+    single.add_argument("--tags", nargs="+", help="Tag names")
     single.add_argument("--billable", action="store_true")
-    single.add_argument("--timezone", default="UTC", help="Local timezone (e.g. America/Argentina/Buenos_Aires)")
+    single.add_argument("--timezone", default="UTC")
 
     # batch
     batch = sub.add_parser("batch", help="Log entries from a YAML file")
     batch.add_argument("--file", required=True)
-    batch.add_argument("--dry-run", action="store_true", help="Preview without creating")
+    batch.add_argument("--dry-run", action="store_true")
 
     # weekly
     weekly = sub.add_parser("weekly", help="Log a full week from a schedule file")
-    weekly.add_argument("--schedule", required=True, help="Path to weekly_schedule.yml")
+    weekly.add_argument("--schedule", required=True)
     weekly.add_argument("--week", help="Monday of target week (YYYY-MM-DD). Defaults to current week.")
-    weekly.add_argument("--dry-run", action="store_true", help="Preview without creating")
+    weekly.add_argument("--dry-run", action="store_true")
 
     args = parser.parse_args()
 
@@ -256,8 +325,12 @@ def main() -> None:
         }
         if args.project:
             entry["project"] = args.project
+        if args.client:
+            entry["client"] = args.client
         if args.project_id:
             entry["project_id"] = args.project_id
+        if args.tags:
+            entry["tags"] = args.tags
         process_entry(args.api_key, workspace_id, entry, tz_name=args.timezone)
 
     elif args.mode == "batch":
