@@ -89,6 +89,16 @@
         .toast.info    { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
 
         .no-dist { color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 3rem 1rem; }
+
+        /* Conflict modal */
+        .modal-wide { width: 520px; }
+        .conflict-list { margin: 0.75rem 0; max-height: 260px; overflow-y: auto; }
+        .conflict-item { background: #fef9ec; border: 1px solid #fde68a; border-radius: 8px; padding: 0.65rem 0.85rem; margin-bottom: 0.5rem; font-size: 0.8rem; }
+        .conflict-item .new  { color: #1e293b; font-weight: 600; }
+        .conflict-item .existing { color: #92400e; margin-top: 0.2rem; }
+        .conflict-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1rem; flex-wrap: wrap; }
+        .btn-warn { background: #f59e0b; color: white; }
+        .btn-warn:hover { background: #d97706; }
     </style>
 </head>
 <body>
@@ -176,12 +186,38 @@
             <p class="hint">Requiere permisos <code>repo</code> y <code>workflow</code>. Se guarda solo en tu navegador.</p>
         </div>
         <div class="form-group">
-            <label>Repositorio</label>
+            <label>Repositorio GitHub</label>
             <input type="text" id="ghRepo" placeholder="usuario/clockify_manager" />
+        </div>
+        <div class="form-group">
+            <label>Clockify API Key</label>
+            <input type="password" id="clockifyKey" placeholder="Perfil → API en Clockify" />
+            <p class="hint">Necesario para verificar superposiciones antes de cargar.</p>
+        </div>
+        <div class="form-group">
+            <label>Clockify Workspace ID <span style="font-weight:400;color:#94a3b8">(opcional)</span></label>
+            <input type="text" id="clockifyWs" placeholder="Se auto-detecta si está vacío" />
         </div>
         <div class="modal-actions">
             <button class="btn btn-outline" onclick="closeConfig()">Cancelar</button>
             <button class="btn btn-primary" onclick="saveConfig()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Conflict Modal -->
+<div class="modal-bg" id="conflictModal">
+    <div class="modal modal-wide">
+        <h2>⚠ Superposición detectada</h2>
+        <p style="font-size:0.83rem;color:#475569;margin-bottom:0.5rem">
+            Las siguientes entradas se superponen con horas ya cargadas en Clockify:
+        </p>
+        <div class="conflict-list" id="conflictList"></div>
+        <p style="font-size:0.82rem;color:#475569;margin-top:0.75rem">¿Qué querés hacer?</p>
+        <div class="conflict-actions">
+            <button class="btn btn-outline" onclick="closeConflictModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="proceedLoad('skip')">Saltar conflictos</button>
+            <button class="btn btn-warn" onclick="proceedLoad('overwrite')">Sobreescribir</button>
         </div>
     </div>
 </div>
@@ -461,25 +497,159 @@ function dayIdx(dateStr) {
     return (d.getDay() + 6) % 7;
 }
 
+// ── Clockify API ──────────────────────────────────────────────────────────────
+
+const CLOCKIFY_API = 'https://api.clockify.me/api/v1';
+
+function clockifyFetch(apiKey, url, opts={}) {
+    return fetch(url, { ...opts, headers: { 'X-Api-Key': apiKey, 'Content-Type': 'application/json' } });
+}
+
+function toUtcIso(dateStr, timeStr) {
+    // Argentina = UTC-3: add 3h to convert local → UTC
+    const [h, m] = timeStr.split(':').map(Number);
+    let utcH = h + 3, utcDate = dateStr;
+    if (utcH >= 24) {
+        utcH -= 24;
+        const d = new Date(dateStr + 'T12:00:00Z');
+        d.setUTCDate(d.getUTCDate() + 1);
+        utcDate = d.toISOString().split('T')[0];
+    }
+    return `${utcDate}T${String(utcH).padStart(2,'0')}:${String(m).padStart(2,'0')}:00Z`;
+}
+
+async function getClockifyContext(apiKey, savedWsId) {
+    const userRes = await clockifyFetch(apiKey, `${CLOCKIFY_API}/user`);
+    if (!userRes.ok) throw new Error('API key de Clockify inválida.');
+    const user = await userRes.json();
+    const wsId = savedWsId || user.defaultWorkspace;
+    return { userId: user.id, workspaceId: wsId };
+}
+
+async function fetchExistingEntries(apiKey, wsId, userId, start, end) {
+    const entries = [];
+    let page = 1;
+    while (true) {
+        const r = await clockifyFetch(apiKey,
+            `${CLOCKIFY_API}/workspaces/${wsId}/user/${userId}/time-entries?start=${start}&end=${end}&page=${page}&page-size=50`);
+        if (!r.ok) break;
+        const batch = await r.json();
+        entries.push(...batch);
+        if (batch.length < 50) break;
+        page++;
+    }
+    return entries;
+}
+
+async function detectConflicts(apiKey, wsId, entries) {
+    const { userId, workspaceId } = await getClockifyContext(apiKey, wsId);
+    const dates = entries.map(e => e.date).sort();
+    const existing = await fetchExistingEntries(apiKey, workspaceId, userId,
+        `${dates[0]}T00:00:00Z`, `${dates[dates.length-1]}T23:59:59Z`);
+
+    const conflicts = [];
+    for (const entry of entries) {
+        const ns = toUtcIso(entry.date, entry.start);
+        const ne = toUtcIso(entry.date, entry.end);
+        for (const ex of existing) {
+            const es = ex.timeInterval?.start, ee = ex.timeInterval?.end;
+            if (!ee) continue;
+            if (ns < ee && ne > es) {
+                conflicts.push({
+                    entry,
+                    existingId: ex.id,
+                    existingDesc: ex.description || '(sin descripción)',
+                    existingStart: es.substr(11,5),
+                    existingEnd:   ee.substr(11,5),
+                });
+            }
+        }
+    }
+    return { conflicts, workspaceId };
+}
+
+async function deleteClockifyEntry(apiKey, wsId, entryId) {
+    await clockifyFetch(apiKey, `${CLOCKIFY_API}/workspaces/${wsId}/time-entries/${entryId}`, { method: 'DELETE' });
+}
+
+// ── Pending load state ─────────────────────────────────────────────────────────
+
+let _pendingLoad = null; // { entries, conflicts, workspaceId, monday }
+
 // ── Load to Clockify ──────────────────────────────────────────────────────────
 
 async function loadToClockify() {
-    const { token, repo } = getConfig();
-    if (!token || !repo) return showToast('Configurá el token y repositorio primero.', 'error');
+    const { token, repo, clockifyKey, clockifyWs } = getConfig();
+    if (!token || !repo) return showToast('Configurá el token de GitHub y el repositorio primero.', 'error');
 
     const filled = currentBlocks.filter(b => b.pidx !== null);
     if (!filled.length) return showToast('Generá la distribución primero.', 'error');
 
     const monday = getMondayFromInput();
-    const tz = 'America/Argentina/Buenos_Aires';
+    const entries = filled.map(b => ({ ...b, project: projects[b.pidx].name, client: projects[b.pidx].client, tag: projects[b.pidx].tag }));
 
-    // Build entries YAML
+    document.getElementById('loadBtn').disabled = true;
+
+    // Check overlaps via Clockify API if key is configured
+    if (clockifyKey) {
+        showToast('Verificando superposiciones...', 'info');
+        try {
+            const { conflicts, workspaceId } = await detectConflicts(clockifyKey, clockifyWs, entries);
+            if (conflicts.length > 0) {
+                _pendingLoad = { entries, conflicts, workspaceId, monday };
+                document.getElementById('loadBtn').disabled = false;
+                showConflictModal(conflicts);
+                return;
+            }
+        } catch(e) {
+            showToast('No se pudo verificar Clockify: ' + e.message, 'error');
+            document.getElementById('loadBtn').disabled = false;
+            return;
+        }
+    }
+
+    await commitAndTrigger(entries, monday, token, repo);
+    document.getElementById('loadBtn').disabled = false;
+}
+
+async function proceedLoad(mode) {
+    closeConflictModal();
+    if (!_pendingLoad) return;
+    const { entries, conflicts, workspaceId, monday } = _pendingLoad;
+    const { token, repo, clockifyKey } = getConfig();
+
+    let entriesToLoad = entries;
+
+    if (mode === 'overwrite') {
+        showToast('Eliminando entradas existentes...', 'info');
+        const idsToDelete = [...new Set(conflicts.map(c => c.existingId))];
+        for (const id of idsToDelete) {
+            await deleteClockifyEntry(clockifyKey, workspaceId, id);
+        }
+    } else if (mode === 'skip') {
+        const conflictingBlocks = new Set(conflicts.map(c => `${c.entry.date}|${c.entry.start}`));
+        entriesToLoad = entries.filter(e => !conflictingBlocks.has(`${e.date}|${e.start}`));
+        if (!entriesToLoad.length) {
+            showToast('Todas las entradas tenían conflictos. No se cargó nada.', 'info');
+            _pendingLoad = null;
+            return;
+        }
+    }
+
+    document.getElementById('loadBtn').disabled = true;
+    await commitAndTrigger(entriesToLoad, monday, token, repo);
+    document.getElementById('loadBtn').disabled = false;
+    _pendingLoad = null;
+}
+
+async function commitAndTrigger(entries, monday, token, repo) {
+    const tz = 'America/Argentina/Buenos_Aires';
     const lines = [`timezone: "${tz}"`, 'entries:'];
-    filled.forEach(b => {
-        const p = projects[b.pidx];
-        lines.push(`  - date: "${b.date}"`);
-        lines.push(`    start: "${b.start}"`);
-        lines.push(`    end: "${b.end}"`);
+    entries.forEach(e => {
+        const p = projects[e.pidx];
+        lines.push(`  - date: "${e.date}"`);
+        lines.push(`    start: "${e.start}"`);
+        lines.push(`    end: "${e.end}"`);
         lines.push(`    project: "${p.name}"`);
         if (p.client) lines.push(`    client: "${p.client}"`);
         lines.push(`    tags:`);
@@ -488,30 +658,19 @@ async function loadToClockify() {
     });
     const yaml = lines.join('\n');
 
-    document.getElementById('loadBtn').disabled = true;
     showToast('Subiendo entries.yml a GitHub...', 'info');
-
     try {
-        // Get current SHA if file exists
         let sha;
         const getRes = await ghFetch(token, `https://api.github.com/repos/${repo}/contents/entries.yml`);
         if (getRes.ok) sha = (await getRes.json()).sha;
 
-        // Commit file
-        const putBody = {
-            message: `Weekly entries for ${fmtDate(monday)} [web]`,
-            content: btoa(unescape(encodeURIComponent(yaml))),
-        };
+        const putBody = { message: `Weekly entries for ${fmtDate(monday)} [web]`, content: btoa(unescape(encodeURIComponent(yaml))) };
         if (sha) putBody.sha = sha;
 
-        const putRes = await ghFetch(token, `https://api.github.com/repos/${repo}/contents/entries.yml`, {
-            method: 'PUT', body: JSON.stringify(putBody)
-        });
+        const putRes = await ghFetch(token, `https://api.github.com/repos/${repo}/contents/entries.yml`, { method: 'PUT', body: JSON.stringify(putBody) });
         if (!putRes.ok) throw new Error(`Error al commitear: ${(await putRes.json()).message}`);
 
         showToast('Disparando workflow...', 'info');
-
-        // Trigger workflow
         const wfRes = await ghFetch(token, `https://api.github.com/repos/${repo}/actions/workflows/log-hours.yml/dispatches`, {
             method: 'POST',
             body: JSON.stringify({ ref: 'main', inputs: { mode: 'batch', entries_file: 'entries.yml', dry_run: 'false' } })
@@ -521,16 +680,29 @@ async function loadToClockify() {
         showToast('¡Cargado! Revisá Actions en GitHub.', 'success');
     } catch(e) {
         showToast(e.message, 'error');
-    } finally {
-        document.getElementById('loadBtn').disabled = false;
     }
 }
 
 function ghFetch(token, url, opts={}) {
-    return fetch(url, {
-        ...opts,
-        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }
-    });
+    return fetch(url, { ...opts, headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' } });
+}
+
+// ── Conflict modal ────────────────────────────────────────────────────────────
+
+function showConflictModal(conflicts) {
+    const list = document.getElementById('conflictList');
+    list.innerHTML = conflicts.map(c => {
+        const p = projects[c.entry.pidx];
+        return `<div class="conflict-item">
+            <div class="new">● ${c.entry.date} ${c.entry.start}-${c.entry.end} — ${p.name}</div>
+            <div class="existing">↔ Conflicto con: "${c.existingDesc}" ${c.existingStart}-${c.existingEnd} UTC</div>
+        </div>`;
+    }).join('');
+    document.getElementById('conflictModal').classList.add('open');
+}
+
+function closeConflictModal() {
+    document.getElementById('conflictModal').classList.remove('open');
 }
 
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -539,17 +711,26 @@ function openConfig() {
     const c = getConfig();
     document.getElementById('ghToken').value = c.token;
     document.getElementById('ghRepo').value = c.repo;
+    document.getElementById('clockifyKey').value = c.clockifyKey;
+    document.getElementById('clockifyWs').value = c.clockifyWs;
     document.getElementById('configModal').classList.add('open');
 }
 function closeConfig() { document.getElementById('configModal').classList.remove('open'); }
 function saveConfig() {
-    localStorage.setItem('gh_token', document.getElementById('ghToken').value.trim());
-    localStorage.setItem('gh_repo', document.getElementById('ghRepo').value.trim());
+    localStorage.setItem('gh_token',       document.getElementById('ghToken').value.trim());
+    localStorage.setItem('gh_repo',        document.getElementById('ghRepo').value.trim());
+    localStorage.setItem('clockify_key',   document.getElementById('clockifyKey').value.trim());
+    localStorage.setItem('clockify_ws',    document.getElementById('clockifyWs').value.trim());
     closeConfig();
     showToast('Configuración guardada.', 'success');
 }
 function getConfig() {
-    return { token: localStorage.getItem('gh_token')||'', repo: localStorage.getItem('gh_repo')||'' };
+    return {
+        token:       localStorage.getItem('gh_token')     || '',
+        repo:        localStorage.getItem('gh_repo')      || '',
+        clockifyKey: localStorage.getItem('clockify_key') || '',
+        clockifyWs:  localStorage.getItem('clockify_ws')  || '',
+    };
 }
 function loadConfig() {
     const h = window.location.hostname;
