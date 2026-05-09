@@ -2,30 +2,14 @@ timezone: "America/Argentina/Buenos_Aires"
 entries:
   - date: "2026-05-15"
     start: "09:00"
-    end: "11:00"
-    project: "PEDAN"
-    client: "DNN"
-    tags:
-      - "Ejecución de Ingenieria"
-    billable: true
-  - date: "2026-05-15"
-    start: "11:00"
     end: "13:00"
-    project: "PEPOM"
-    client: "DNN"
+    project: "PSSRA 30"
+    client: "DPI"
     tags:
       - "Ejecución de Ingenieria"
     billable: true
   - date: "2026-05-15"
     start: "14:00"
-    end: "17:00"
-    project: "PEVLP"
-    client: "DNN"
-    tags:
-      - "Ejecución de Ingenieria"
-    billable: true
-  - date: "2026-05-15"
-    start: "17:00"
     end: "18:00"
     project: "PSSRA 30"
     client: "DPI"
