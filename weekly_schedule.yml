@@ -22,11 +22,13 @@ weeks:
         end: "13:00"
         description: "Desarrollo"
         project: "BESS AMBA"
+        client: "DNN"
         billable: true
       - start: "14:00"
         end: "18:00"
         description: "Reuniones y planificación"
         project: "CTBRA"
+        client: "O&M"
         billable: false
 
     tuesday:
@@ -34,4 +36,5 @@ weeks:
         end: "18:00"
         description: "Desarrollo"
         project: "BESS SADI"
+        client: "DNN"
         billable: true
