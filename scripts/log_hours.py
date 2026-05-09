@@ -226,16 +226,19 @@ def process_entry(
     print(f"{label} | id={result['id']}")
 
 
+def _entry_date_obj(entry: dict) -> date:
+    return (
+        datetime.strptime(entry["date"], "%Y-%m-%d").date()
+        if isinstance(entry["date"], str)
+        else entry["date"]
+    )
+
+
 def validate_no_overlaps(entries: list[dict], tz_name: str) -> None:
-    """Abort if any two entries on the same day overlap in time."""
+    """Abort if any two entries in this batch overlap on the same day."""
     by_date: dict[str, list[dict]] = {}
     for e in entries:
-        date_obj = (
-            datetime.strptime(e["date"], "%Y-%m-%d").date()
-            if isinstance(e["date"], str)
-            else e["date"]
-        )
-        key = date_obj.isoformat()
+        key = _entry_date_obj(e).isoformat()
         by_date.setdefault(key, []).append(e)
 
     errors = []
@@ -243,7 +246,6 @@ def validate_no_overlaps(entries: list[dict], tz_name: str) -> None:
         sorted_entries = sorted(day_entries, key=lambda e: e["start"])
         for i in range(len(sorted_entries) - 1):
             a, b = sorted_entries[i], sorted_entries[i + 1]
-            # Overlap when a ends after b starts
             if a["end"] > b["start"]:
                 errors.append(
                     f"  {day}: '{a.get('description', '?')}' {a['start']}-{a['end']} "
@@ -254,6 +256,80 @@ def validate_no_overlaps(entries: list[dict], tz_name: str) -> None:
         sys.exit("Overlap detected — no entries were created:\n" + "\n".join(errors))
 
 
+def get_current_user_id(api_key: str) -> str:
+    resp = requests.get(f"{CLOCKIFY_API_BASE}/user", headers=get_headers(api_key))
+    resp.raise_for_status()
+    return resp.json()["id"]
+
+
+def get_existing_entries(
+    api_key: str, workspace_id: str, user_id: str, start_utc: str, end_utc: str
+) -> list[dict]:
+    """Fetch all existing time entries in the given UTC range (handles pagination)."""
+    entries, page = [], 1
+    while True:
+        resp = requests.get(
+            f"{CLOCKIFY_API_BASE}/workspaces/{workspace_id}/user/{user_id}/time-entries",
+            headers=get_headers(api_key),
+            params={"start": start_utc, "end": end_utc, "page": page, "page-size": 50},
+        )
+        resp.raise_for_status()
+        batch = resp.json()
+        entries.extend(batch)
+        if len(batch) < 50:
+            break
+        page += 1
+    return entries
+
+
+def validate_against_clockify(
+    api_key: str, workspace_id: str, entries: list[dict], tz_name: str
+) -> None:
+    """Abort if any new entry overlaps with an already-existing Clockify entry."""
+    if not entries:
+        return
+
+    # Build UTC intervals for all new entries
+    new_intervals = [
+        (to_utc(_entry_date_obj(e), e["start"], tz_name),
+         to_utc(_entry_date_obj(e), e["end"], tz_name),
+         e)
+        for e in entries
+    ]
+
+    range_start = min(s for s, _, _ in new_intervals)
+    range_end   = max(en for _, en, _ in new_intervals)
+
+    print(f"Checking existing Clockify entries from {range_start} to {range_end}...")
+    user_id = get_current_user_id(api_key)
+    existing = get_existing_entries(api_key, workspace_id, user_id, range_start, range_end)
+
+    errors = []
+    for new_start, new_end, entry in new_intervals:
+        date_str = _entry_date_obj(entry).isoformat()
+        for ex in existing:
+            interval = ex.get("timeInterval", {})
+            ex_start = interval.get("start", "")
+            ex_end   = interval.get("end", "")
+            if not ex_end:
+                continue  # skip running timers
+            if new_start < ex_end and new_end > ex_start:
+                # Convert existing times to local HH:MM for readability
+                ex_s = ex_start[11:16]
+                ex_e = ex_end[11:16]
+                errors.append(
+                    f"  {date_str}: '{entry.get('description', '?')}' "
+                    f"{entry['start']}-{entry['end']} overlaps existing "
+                    f"'{ex.get('description', '?')}' {ex_s}-{ex_e} (UTC)"
+                )
+
+    if errors:
+        sys.exit(
+            "Overlap with existing Clockify entries — no entries were created:\n"
+            + "\n".join(errors)
+        )
+
+
 def run_entries(
     api_key: str,
     workspace_id: str,
@@ -262,6 +338,7 @@ def run_entries(
     dry_run: bool = False,
 ) -> None:
     validate_no_overlaps(entries, tz_name)
+    validate_against_clockify(api_key, workspace_id, entries, tz_name)
     errors = 0
     for i, entry in enumerate(entries, 1):
         try:
@@ -360,6 +437,7 @@ def main() -> None:
             entry["project_id"] = args.project_id
         if args.tags:
             entry["tags"] = args.tags
+        validate_against_clockify(args.api_key, workspace_id, [entry], tz_name=args.timezone)
         process_entry(args.api_key, workspace_id, entry, tz_name=args.timezone)
 
     elif args.mode == "batch":
