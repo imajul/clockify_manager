@@ -35,6 +35,6 @@ weeks:
       - start: "09:00"
         end: "18:00"
         description: "Desarrollo"
-        project: "BESS SADI"
+        project: "ALMA SADI"
         client: "DNN"
         billable: true
