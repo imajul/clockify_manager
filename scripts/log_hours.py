@@ -226,6 +226,34 @@ def process_entry(
     print(f"{label} | id={result['id']}")
 
 
+def validate_no_overlaps(entries: list[dict], tz_name: str) -> None:
+    """Abort if any two entries on the same day overlap in time."""
+    by_date: dict[str, list[dict]] = {}
+    for e in entries:
+        date_obj = (
+            datetime.strptime(e["date"], "%Y-%m-%d").date()
+            if isinstance(e["date"], str)
+            else e["date"]
+        )
+        key = date_obj.isoformat()
+        by_date.setdefault(key, []).append(e)
+
+    errors = []
+    for day, day_entries in sorted(by_date.items()):
+        sorted_entries = sorted(day_entries, key=lambda e: e["start"])
+        for i in range(len(sorted_entries) - 1):
+            a, b = sorted_entries[i], sorted_entries[i + 1]
+            # Overlap when a ends after b starts
+            if a["end"] > b["start"]:
+                errors.append(
+                    f"  {day}: '{a.get('description', '?')}' {a['start']}-{a['end']} "
+                    f"overlaps '{b.get('description', '?')}' {b['start']}-{b['end']}"
+                )
+
+    if errors:
+        sys.exit("Overlap detected — no entries were created:\n" + "\n".join(errors))
+
+
 def run_entries(
     api_key: str,
     workspace_id: str,
@@ -233,6 +261,7 @@ def run_entries(
     tz_name: str = "UTC",
     dry_run: bool = False,
 ) -> None:
+    validate_no_overlaps(entries, tz_name)
     errors = 0
     for i, entry in enumerate(entries, 1):
         try:
