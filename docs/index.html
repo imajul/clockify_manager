@@ -53,12 +53,12 @@
 
         /* Grid */
         .grid-wrap { overflow-x: auto; }
-        .day-grid { display: grid; grid-template-columns: 48px repeat(5, 1fr); gap: 5px; min-width: 460px; }
+        .day-grid { display: flex; gap: 8px; min-width: 0; }
+        .day-col { flex: 1; min-width: 90px; display: flex; flex-direction: column; gap: 3px; }
         .day-header { text-align: center; font-size: 0.72rem; font-weight: 700; color: #64748b; padding: 0.4rem 0; text-transform: uppercase; letter-spacing: 0.05em; }
-        .time-label { font-size: 0.68rem; color: #94a3b8; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; }
-        .block { border-radius: 8px; padding: 0.55rem 0.4rem; min-height: 76px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-size: 0.73rem; font-weight: 500; }
-        .block-empty { background: #f1f5f9; color: #cbd5e1; border: 1.5px dashed #e2e8f0; }
-        .block-project { color: white; }
+        .entry-card { border-radius: 7px; padding: 0.45rem 0.5rem; color: white; font-size: 0.73rem; font-weight: 500; }
+        .entry-card .entry-time { font-size: 0.67rem; opacity: 0.85; display: block; margin-bottom: 2px; }
+        .entry-empty { background: #f1f5f9; color: #cbd5e1; border: 1.5px dashed #e2e8f0; border-radius: 7px; padding: 0.45rem 0.5rem; font-size: 0.75rem; text-align: center; min-height: 60px; display: flex; align-items: center; justify-content: center; }
 
         .legend { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
         .legend-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: #475569; }
@@ -471,6 +471,32 @@ function updateTotal() {
 
 // ── Distribution ──────────────────────────────────────────────────────────────
 
+// 8 one-hour slots per day (09-13 AM, 14-18 PM)
+const HOUR_SLOTS = [
+    {start:'09:00',end:'10:00',group:'am'},{start:'10:00',end:'11:00',group:'am'},
+    {start:'11:00',end:'12:00',group:'am'},{start:'12:00',end:'13:00',group:'am'},
+    {start:'14:00',end:'15:00',group:'pm'},{start:'15:00',end:'16:00',group:'pm'},
+    {start:'16:00',end:'17:00',group:'pm'},{start:'17:00',end:'18:00',group:'pm'},
+];
+
+function slotHours(start, end) { return parseInt(end) - parseInt(start); }
+
+function mergeSlots(rawSlots) {
+    // Merge consecutive same-project slots within the same AM/PM group
+    const entries = [];
+    let cur = null;
+    for (const s of rawSlots) {
+        if (cur && cur.pidx === s.pidx && cur.group === s.group && cur.end === s.start) {
+            cur.end = s.end;
+        } else {
+            if (cur) entries.push(cur);
+            cur = {...s};
+        }
+    }
+    if (cur) entries.push(cur);
+    return entries;
+}
+
 function distribute() {
     if (!selectedDates.length) return showToast('Seleccioná al menos un día en el calendario.', 'error');
 
@@ -480,40 +506,42 @@ function distribute() {
     const valid = projects.filter(p => p.name.trim());
     if (!valid.length) return showToast('Completá al menos un proyecto.', 'error');
 
-    // 2 blocks per day (AM 09-13, PM 14-18)
-    const totalBlocks = selectedDates.length * 2;
-    const blocks = [];
+    // Build 1-hour raw slots for all selected days
+    const totalSlots = selectedDates.length * 8;
+    const rawSlots = [];
     for (const date of selectedDates) {
         const d = new Date(date + 'T12:00:00');
-        const dayName = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()];
-        const dayNum  = d.getDate();
-        const label   = `${dayName} ${dayNum}`;
-        blocks.push({ date, label, start: '09:00', end: '13:00', pidx: null });
-        blocks.push({ date, label, start: '14:00', end: '18:00', pidx: null });
+        const label = `${'Dom Lun Mar Mié Jue Vie Sáb'.split(' ')[d.getDay()]} ${d.getDate()}`;
+        for (const slot of HOUR_SLOTS) {
+            rawSlots.push({ date, label, ...slot, pidx: null });
+        }
     }
 
-    // Allocate blocks per project using largest-remainder method
+    // Allocate slots per project using largest-remainder method
     const idxs = projects.map((_,i)=>i).filter(i=>projects[i].name.trim());
-    const exact = idxs.map(i => projects[i].pct / 100 * totalBlocks);
+    const exact = idxs.map(i => projects[i].pct / 100 * totalSlots);
     const floor = exact.map(Math.floor);
-    let rem = totalBlocks - floor.reduce((a,b)=>a+b, 0);
+    let rem = totalSlots - floor.reduce((a,b)=>a+b, 0);
     exact.map((v,i)=>({i,r:v-floor[i]}))
          .sort((a,b)=>b.r-a.r)
          .slice(0,rem)
          .forEach(({i})=>floor[i]++);
 
-    let bi = 0;
+    let si = 0;
     idxs.forEach((pidx, pi) => {
-        for (let b = 0; b < floor[pi]; b++) {
-            if (bi < blocks.length) blocks[bi++].pidx = pidx;
+        for (let s = 0; s < floor[pi]; s++) {
+            if (si < rawSlots.length) rawSlots[si++].pidx = pidx;
         }
     });
 
-    currentBlocks = blocks;
-    renderGrid(blocks);
+    // Merge consecutive same-project slots
+    const merged = mergeSlots(rawSlots.filter(s => s.pidx !== null));
+    currentBlocks = merged;
+    renderGrid(merged);
     document.getElementById('loadBtn').disabled = false;
-    const filled = blocks.filter(b=>b.pidx!==null).length;
-    document.getElementById('actionsHint').textContent = `${filled * 4}h distribuidas en ${selectedDates.length} día${selectedDates.length>1?'s':''}.`;
+    const totalH = merged.reduce((s,b) => s + slotHours(b.start, b.end), 0);
+    document.getElementById('actionsHint').textContent =
+        `${totalH}h distribuidas en ${selectedDates.length} día${selectedDates.length>1?'s':''} · ${merged.length} entradas.`;
     showToast('Distribución generada.', 'success');
 }
 
@@ -523,42 +551,46 @@ function renderGrid(blocks) {
     const grid = document.getElementById('dayGrid');
     grid.innerHTML = '';
 
-    const addEl = (tag, cls, html='') => {
-        const e = document.createElement(tag);
-        e.className = cls;
-        e.innerHTML = html;
-        grid.appendChild(e);
-        return e;
-    };
-
     const uniqueDates = [...new Set(blocks.map(b=>b.date))];
-    const n = uniqueDates.length || 5;
-    grid.style.gridTemplateColumns = `48px repeat(${n}, minmax(80px, 1fr))`;
 
-    addEl('div','');
+    if (!uniqueDates.length) {
+        grid.innerHTML = '<div class="no-dist" style="width:100%">Generá la distribución para ver las entradas.</div>';
+        return;
+    }
+
     uniqueDates.forEach(date => {
-        const b = blocks.find(b=>b.date===date);
-        addEl('div','day-header', b ? b.label : '');
-    });
+        const col = document.createElement('div');
+        col.className = 'day-col';
 
-    ['09:00','14:00'].forEach((slot, si) => {
-        addEl('div','time-label', si===0?'AM':'PM');
-        uniqueDates.forEach(date => {
-            const b = blocks.find(b => b.date===date && b.start===slot);
-            if (!b || b.pidx === null) {
-                addEl('div','block block-empty','—');
-            } else {
+        const header = document.createElement('div');
+        header.className = 'day-header';
+        header.textContent = blocks.find(b=>b.date===date)?.label || '';
+        col.appendChild(header);
+
+        const dayBlocks = blocks.filter(b=>b.date===date);
+        if (!dayBlocks.length) {
+            const empty = document.createElement('div');
+            empty.className = 'entry-empty';
+            empty.textContent = '—';
+            col.appendChild(empty);
+        } else {
+            dayBlocks.forEach(b => {
                 const p = projects[b.pidx];
                 const color = COLORS[b.pidx % COLORS.length];
-                const el = addEl('div','block block-project',
-                    `<strong style="font-size:0.78rem">${p.name}</strong><br>
-                     <span style="opacity:.8;font-size:0.68rem">${p.client||''}</span>`);
-                el.style.background = color;
-            }
-        });
+                const hrs = slotHours(b.start, b.end);
+                const card = document.createElement('div');
+                card.className = 'entry-card';
+                card.style.background = color;
+                card.style.minHeight = `${hrs * 22}px`;
+                card.innerHTML = `<span class="entry-time">${b.start}–${b.end} (${hrs}h)</span><strong>${p.name}</strong>`;
+                col.appendChild(card);
+            });
+        }
+
+        grid.appendChild(col);
     });
 
-    // Legend
+    // Legend & summary
     const legend = document.getElementById('legend');
     legend.innerHTML = '';
     const summary = document.getElementById('hoursSummary');
@@ -567,7 +599,8 @@ function renderGrid(blocks) {
     projects.forEach((p,i) => {
         if (!p.name) return;
         const color = COLORS[i % COLORS.length];
-        const hrs = blocks.filter(b=>b.pidx===i).length * 4;
+        const hrs = blocks.filter(b=>b.pidx===i).reduce((s,b)=>s+slotHours(b.start,b.end),0);
+        if (!hrs) return;
         legend.innerHTML += `<div class="legend-item"><span class="legend-dot" style="background:${color}"></span>${p.name}${p.client?' · '+p.client:''}</div>`;
         summary.innerHTML += `<div class="hours-chip">${p.name}<strong>${hrs}h</strong></div>`;
     });
