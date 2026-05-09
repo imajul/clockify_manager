@@ -4,23 +4,10 @@
 #   python scripts/log_hours.py batch --file entries.yml
 
 entries:
-  - date: "2024-01-15"
+  - date: "2026-05-08"
     start: "09:00"
     end: "12:30"
     description: "Backend API development"
-    project: "My Project"
+    project: "BESS AMBA"
     billable: true
 
-  - date: "2024-01-15"
-    start: "13:30"
-    end: "17:00"
-    description: "Code review and testing"
-    project: "My Project"
-    billable: true
-
-  - date: "2024-01-16"
-    start: "10:00"
-    end: "11:00"
-    description: "Team standup and planning"
-    # project_id: "abc123"   # alternative: use project ID directly
-    billable: false
