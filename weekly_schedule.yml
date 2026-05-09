@@ -10,56 +10,7 @@ timezone: "America/Argentina/Buenos_Aires"
 # Applied every week unless a specific week overrides a day.
 # Omit a day entirely (or set it to []) to mark it as a day off.
 
-default:
-  monday:
-    - start: "09:00"
-      end: "13:00"
-      description: "Desarrollo"
-      project: "Proyecto A"
-      billable: true
-    - start: "14:00"
-      end: "18:00"
-      description: "Reuniones y planificación"
-      project: "Proyecto B"
-      billable: false
 
-  tuesday:
-    - start: "09:00"
-      end: "18:00"
-      description: "Desarrollo"
-      project: "Proyecto A"
-      billable: true
-
-  wednesday:
-    - start: "09:00"
-      end: "13:00"
-      description: "Desarrollo"
-      project: "Proyecto A"
-      billable: true
-    - start: "14:00"
-      end: "17:00"
-      description: "Code review"
-      project: "Proyecto A"
-      billable: true
-
-  thursday:
-    - start: "09:00"
-      end: "18:00"
-      description: "Desarrollo"
-      project: "Proyecto B"
-      billable: true
-
-  friday:
-    - start: "09:00"
-      end: "13:00"
-      description: "Desarrollo"
-      project: "Proyecto A"
-      billable: true
-    - start: "14:00"
-      end: "16:00"
-      description: "Retrospectiva y cierre de semana"
-      project: "Proyecto B"
-      billable: false
 
   # saturday: []   # descomentá para marcar sábado como día libre explícitamente
   # sunday: []     # el domingo no aparece en default, así que ya se ignora
@@ -72,25 +23,21 @@ default:
 
 weeks:
   "2026-05-04":
-    # Ejemplo: semana con feriado el miércoles y cambio de proyecto el viernes
-    wednesday: []   # feriado — se saltea el día completo
-    friday:
-      - start: "09:00"
-        end: "14:00"
-        description: "Entrega sprint"
-        project: "Proyecto C"
-        billable: true
+   monday:
+    - start: "09:00"
+      end: "13:00"
+      description: "Desarrollo"
+      project: "BESS AMBA"
+      billable: true
+    - start: "14:00"
+      end: "18:00"
+      description: "Reuniones y planificación"
+      project: "CTBRA"
+      billable: false
 
-  "2026-05-11":
-    # Ejemplo: semana con horas extras el lunes
-    monday:
-      - start: "08:00"
-        end: "13:00"
-        description: "Desarrollo"
-        project: "Proyecto A"
-        billable: true
-      - start: "14:00"
-        end: "19:00"
-        description: "Deploy y soporte"
-        project: "Proyecto A"
-        billable: true
+  tuesday:
+    - start: "09:00"
+      end: "18:00"
+      description: "Desarrollo"
+      project: "BESS SADI"
+      billable: true
