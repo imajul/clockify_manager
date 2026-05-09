@@ -1,13 +1,82 @@
-# Example batch entries file for Clockify
-# Copy to entries.yml and fill in your real values.
-# Run via GitHub Actions (batch mode) or locally:
-#   python scripts/log_hours.py batch --file entries.yml
-
+timezone: "America/Argentina/Buenos_Aires"
 entries:
+  - date: "2026-05-04"
+    start: "09:00"
+    end: "13:00"
+    project: "PATOC"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-04"
+    start: "14:00"
+    end: "18:00"
+    project: "PATOC"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-05"
+    start: "09:00"
+    end: "13:00"
+    project: "PEHUC"
+    client: "DPI"
+    tags:
+      - "Ejecución de Ingenieria"
+    billable: true
+  - date: "2026-05-05"
+    start: "14:00"
+    end: "18:00"
+    project: "PEHUC"
+    client: "DPI"
+    tags:
+      - "Ejecución de Ingenieria"
+    billable: true
+  - date: "2026-05-06"
+    start: "09:00"
+    end: "13:00"
+    project: "BESS AMBA"
+    client: "DNN"
+    tags:
+      - "Ejecución de Ingenieria"
+    billable: true
+  - date: "2026-05-06"
+    start: "14:00"
+    end: "18:00"
+    project: "BESS AMBA"
+    client: "DNN"
+    tags:
+      - "Ejecución de Ingenieria"
+    billable: true
+  - date: "2026-05-07"
+    start: "09:00"
+    end: "13:00"
+    project: "BESS AMBA"
+    client: "DNN"
+    tags:
+      - "Ejecución de Ingenieria"
+    billable: true
+  - date: "2026-05-07"
+    start: "14:00"
+    end: "18:00"
+    project: "BESS AMBA"
+    client: "DNN"
+    tags:
+      - "Ejecución de Ingenieria"
+    billable: true
   - date: "2026-05-08"
     start: "09:00"
-    end: "12:30"
-    description: "Backend API development"
+    end: "13:00"
     project: "BESS AMBA"
+    client: "DNN"
+    tags:
+      - "Ejecución de Ingenieria"
     billable: true
-
+  - date: "2026-05-08"
+    start: "14:00"
+    end: "18:00"
+    project: "BESS AMBA"
+    client: "DNN"
+    tags:
+      - "Ejecución de Ingenieria"
+    billable: true
