@@ -244,6 +244,9 @@ def main() -> None:
     print(f"Workspace: {workspace_id}")
 
     if args.mode == "single":
+        missing = [f for f, v in [("--date", args.date), ("--start", args.start), ("--end", args.end), ("--description", args.description)] if not v]
+        if missing:
+            sys.exit(f"Error: missing required fields for single mode: {', '.join(missing)}")
         entry = {
             "date": args.date,
             "start": args.start,
