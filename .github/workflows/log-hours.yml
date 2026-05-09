@@ -1,0 +1,138 @@
+name: Log Hours to Clockify
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Mode"
+        required: true
+        default: weekly
+        type: choice
+        options:
+          - weekly
+          - single
+          - batch
+
+      # ── Weekly mode ──────────────────────────────────────────────────────────
+      week_start:
+        description: "Monday of target week (YYYY-MM-DD) — weekly mode. Defaults to current week."
+        required: false
+        default: ""
+      schedule_file:
+        description: "Path to schedule file — weekly mode"
+        required: false
+        default: weekly_schedule.yml
+      dry_run:
+        description: "Dry run (preview entries without creating them)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+      # ── Single-entry mode ────────────────────────────────────────────────────
+      date:
+        description: "Date (YYYY-MM-DD) — single mode"
+        required: false
+        default: ""
+      start_time:
+        description: "Start time (HH:MM) — single mode"
+        required: false
+        default: ""
+      end_time:
+        description: "End time (HH:MM) — single mode"
+        required: false
+        default: ""
+      description:
+        description: "Entry description — single mode"
+        required: false
+        default: ""
+      project:
+        description: "Project name — single mode"
+        required: false
+        default: ""
+      billable:
+        description: "Mark as billable — single mode"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+      # ── Batch mode ───────────────────────────────────────────────────────────
+      entries_file:
+        description: "Path to YAML entries file — batch mode"
+        required: false
+        default: entries.yml
+
+jobs:
+  log-hours:
+    name: Log time entries
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests pyyaml tzdata
+
+      - name: Log weekly entries
+        if: inputs.mode == 'weekly'
+        env:
+          CLOCKIFY_API_KEY: ${{ secrets.CLOCKIFY_API_KEY }}
+          CLOCKIFY_WORKSPACE_ID: ${{ secrets.CLOCKIFY_WORKSPACE_ID }}
+        run: |
+          ARGS="--schedule '${{ inputs.schedule_file }}'"
+
+          if [ -n "${{ inputs.week_start }}" ]; then
+            ARGS="$ARGS --week '${{ inputs.week_start }}'"
+          fi
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+
+          eval python scripts/log_hours.py weekly $ARGS
+
+      - name: Log single entry
+        if: inputs.mode == 'single'
+        env:
+          CLOCKIFY_API_KEY: ${{ secrets.CLOCKIFY_API_KEY }}
+          CLOCKIFY_WORKSPACE_ID: ${{ secrets.CLOCKIFY_WORKSPACE_ID }}
+        run: |
+          ARGS="--date '${{ inputs.date }}' \
+                --start '${{ inputs.start_time }}' \
+                --end '${{ inputs.end_time }}' \
+                --description '${{ inputs.description }}'"
+
+          if [ -n "${{ inputs.project }}" ]; then
+            ARGS="$ARGS --project '${{ inputs.project }}'"
+          fi
+
+          if [ "${{ inputs.billable }}" = "true" ]; then
+            ARGS="$ARGS --billable"
+          fi
+
+          eval python scripts/log_hours.py single $ARGS
+
+      - name: Log batch entries
+        if: inputs.mode == 'batch'
+        env:
+          CLOCKIFY_API_KEY: ${{ secrets.CLOCKIFY_API_KEY }}
+          CLOCKIFY_WORKSPACE_ID: ${{ secrets.CLOCKIFY_WORKSPACE_ID }}
+        run: |
+          ARGS="--file '${{ inputs.entries_file }}'"
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+
+          eval python scripts/log_hours.py batch $ARGS

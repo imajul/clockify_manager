@@ -1,0 +1,40 @@
+# Weekly schedule for automatic Clockify uploads
+# Times are interpreted in the specified timezone and converted to UTC automatically.
+
+timezone: "America/Argentina/Buenos_Aires"
+
+# ── Default schedule ───────────────────────────────────────────────────────────
+# Applied every week unless a specific week overrides a day.
+# Omit a day or set it to [] to mark it as a day off.
+# Optional fields per entry: client, tags, billable
+
+default: {}
+
+
+# ── Overrides por semana ───────────────────────────────────────────────────────
+# Solo listá los días que cambian respecto al default.
+# Clave: lunes de la semana en formato YYYY-MM-DD.
+
+weeks:
+  "2026-05-04":
+    monday:
+      - start: "09:00"
+        end: "13:00"
+        description: "Desarrollo"
+        project: "BESS AMBA"
+        client: "DNN"
+        billable: true
+      - start: "14:00"
+        end: "18:00"
+        description: "Reuniones y planificación"
+        project: "CTBRA"
+        client: "O&M"
+        billable: false
+
+    tuesday:
+      - start: "09:00"
+        end: "18:00"
+        description: "Desarrollo"
+        project: "ALMA SADI"
+        client: "DNN"
+        billable: true

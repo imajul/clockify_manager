@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clockify Manager</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; }
+
+        header { background: #1e293b; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.01em; }
+
+        .main { display: grid; grid-template-columns: 380px 1fr; gap: 1.25rem; padding: 1.25rem; min-height: calc(100vh - 56px); }
+
+        .card { background: white; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+        .section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 0.75rem; }
+
+        .week-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; color: #1e293b; }
+
+        .divider { height: 1px; background: #f1f5f9; margin: 1.1rem 0; }
+
+        .project-card { background: #f8fafc; border-radius: 10px; padding: 0.85rem; margin-bottom: 0.6rem; border: 1px solid #e2e8f0; }
+        .project-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+        .project-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; flex-shrink: 0; }
+        .project-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-bottom: 0.5rem; }
+        .project-fields input, .project-fields select, .tag-select {
+            padding: 0.38rem 0.55rem; border: 1px solid #e2e8f0; border-radius: 6px;
+            font-size: 0.82rem; width: 100%; background: white; color: #1e293b;
+        }
+        .tag-select { margin-bottom: 0.5rem; }
+        .pct-row { display: flex; align-items: center; gap: 0.6rem; }
+        .pct-label { font-size: 0.72rem; color: #94a3b8; width: 20px; flex-shrink: 0; }
+        .pct-slider { flex: 1; accent-color: #2563eb; height: 4px; }
+        .pct-number { width: 52px; padding: 0.3rem 0.4rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.82rem; text-align: center; }
+
+        .total-bar { margin-top: 0.85rem; padding: 0.65rem 0.85rem; background: #f8fafc; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0; }
+        .total-ok  { color: #16a34a; font-weight: 700; font-size: 0.9rem; }
+        .total-err { color: #dc2626; font-weight: 700; font-size: 0.9rem; }
+
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: opacity .15s; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+        .btn-success { background: #16a34a; color: white; }
+        .btn-success:hover:not(:disabled) { background: #15803d; }
+        .btn-outline { background: white; border: 1px solid #e2e8f0; color: #374151; }
+        .btn-outline:hover { background: #f8fafc; }
+        .btn-ghost  { background: transparent; color: #dc2626; font-size: 0.8rem; padding: 0.25rem 0.5rem; }
+        .btn-ghost:hover { background: #fee2e2; border-radius: 6px; }
+        .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+
+        /* Grid */
+        .grid-wrap { overflow-x: auto; }
+        .day-grid { display: flex; gap: 8px; min-width: 0; }
+        .day-col { flex: 1; min-width: 90px; display: flex; flex-direction: column; gap: 3px; }
+        .day-header { text-align: center; font-size: 0.72rem; font-weight: 700; color: #64748b; padding: 0.4rem 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .entry-card { border-radius: 7px; padding: 0.45rem 0.5rem; color: white; font-size: 0.73rem; font-weight: 500; }
+        .entry-card .entry-time { font-size: 0.67rem; opacity: 0.85; display: block; margin-bottom: 2px; }
+        .entry-empty { background: #f1f5f9; color: #cbd5e1; border: 1.5px dashed #e2e8f0; border-radius: 7px; padding: 0.45rem 0.5rem; font-size: 0.75rem; text-align: center; min-height: 60px; display: flex; align-items: center; justify-content: center; }
+
+        .legend { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+        .legend-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: #475569; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+        .hours-summary { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+        .hours-chip { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px; padding: 0.35rem 0.65rem; font-size: 0.78rem; display: flex; gap: 0.5rem; align-items: center; }
+        .hours-chip strong { color: #2563eb; }
+
+        .actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; justify-content: flex-end; align-items: center; }
+        .actions-hint { font-size: 0.75rem; color: #94a3b8; flex: 1; }
+
+        /* Modal */
+        .modal-bg { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 100; justify-content: center; align-items: center; }
+        .modal-bg.open { display: flex; }
+        .modal { background: white; border-radius: 14px; padding: 1.5rem; width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        .modal h2 { font-size: 1rem; margin-bottom: 1.1rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.78rem; font-weight: 600; color: #64748b; margin-bottom: 0.35rem; }
+        .form-group input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; }
+        .form-group .hint { font-size: 0.72rem; color: #94a3b8; margin-top: 0.3rem; }
+        .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.1rem; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; padding: 0.7rem 1.1rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 200; display: none; max-width: 320px; }
+        .toast.success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .toast.error   { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+        .toast.info    { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+
+        /* Calendar */
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+        .cal-header span { font-size: 0.9rem; font-weight: 600; }
+        .cal-nav { background: none; border: 1px solid #e2e8f0; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; font-size: 0.9rem; color: #475569; display: flex; align-items: center; justify-content: center; }
+        .cal-nav:hover { background: #f1f5f9; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+        .cal-day-name { text-align: center; font-size: 0.68rem; font-weight: 700; color: #94a3b8; padding: 0.25rem 0; text-transform: uppercase; }
+        .cal-day { text-align: center; font-size: 0.8rem; padding: 0.35rem 0.1rem; border-radius: 6px; cursor: pointer; border: 1.5px solid transparent; transition: all .1s; user-select: none; }
+        .cal-day:hover:not(.cal-empty):not(.cal-weekend) { background: #dbeafe; }
+        .cal-day.cal-weekend { color: #cbd5e1; cursor: default; }
+        .cal-day.cal-today { border-color: #2563eb; color: #2563eb; font-weight: 700; }
+        .cal-day.cal-selected { background: #2563eb; color: white; border-color: #2563eb; font-weight: 600; }
+        .cal-day.cal-selected.cal-today { background: #1d4ed8; }
+        .cal-day.cal-empty { cursor: default; }
+        .cal-summary { font-size: 0.75rem; color: #64748b; margin-top: 0.6rem; min-height: 1.2rem; }
+        .no-dist { color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 3rem 1rem; }
+
+        /* Conflict modal */
+        .modal-wide { width: 520px; }
+        .conflict-list { margin: 0.75rem 0; max-height: 260px; overflow-y: auto; }
+        .conflict-item { background: #fef9ec; border: 1px solid #fde68a; border-radius: 8px; padding: 0.65rem 0.85rem; margin-bottom: 0.5rem; font-size: 0.8rem; }
+        .conflict-item .new  { color: #1e293b; font-weight: 600; }
+        .conflict-item .existing { color: #92400e; margin-top: 0.2rem; }
+        .conflict-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1rem; flex-wrap: wrap; }
+        .btn-warn { background: #f59e0b; color: white; }
+        .btn-warn:hover { background: #d97706; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>⏱ Clockify Manager</h1>
+    <button class="btn btn-outline btn-sm" onclick="openConfig()">⚙ Configuración</button>
+</header>
+
+<div class="main">
+
+    <!-- LEFT PANEL -->
+    <div>
+        <div class="card">
+            <div class="section-label">Días trabajados</div>
+            <div class="cal-header">
+                <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+                <span id="calTitle"></span>
+                <button class="cal-nav" onclick="changeMonth(1)">›</button>
+            </div>
+            <div class="cal-grid" id="calGrid"></div>
+            <div class="cal-summary" id="calSummary">Hacé click en los días que trabajaste.</div>
+
+            <div class="divider"></div>
+
+            <div class="section-label">Proyectos</div>
+            <div id="projectList"></div>
+            <button class="btn btn-outline btn-sm" onclick="addProject()" style="width:100%;margin-top:0.1rem">
+                + Agregar proyecto
+            </button>
+
+            <div class="total-bar">
+                <span style="font-size:0.82rem;color:#64748b">Total asignado</span>
+                <span id="totalPct" class="total-err">0%</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <button class="btn btn-primary" style="width:100%" onclick="distribute()">
+                Generar distribución →
+            </button>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="card">
+        <div class="section-label">Distribución semanal</div>
+
+        <div class="grid-wrap">
+            <div class="day-grid" id="dayGrid">
+                <div></div>
+                <div class="day-header">Lun</div>
+                <div class="day-header">Mar</div>
+                <div class="day-header">Mié</div>
+                <div class="day-header">Jue</div>
+                <div class="day-header">Vie</div>
+                <div class="time-label">AM</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="time-label">PM</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+            </div>
+        </div>
+
+        <div class="legend" id="legend"></div>
+        <div class="hours-summary" id="hoursSummary"></div>
+
+        <div class="actions">
+            <span class="actions-hint" id="actionsHint">Generá la distribución para habilitar la carga.</span>
+            <button class="btn btn-success" onclick="loadToClockify()" id="loadBtn" disabled>
+                Cargar a Clockify
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Config Modal -->
+<div class="modal-bg" id="configModal">
+    <div class="modal">
+        <h2>⚙ Configuración</h2>
+        <div class="form-group">
+            <label>GitHub Personal Access Token</label>
+            <input type="password" id="ghToken" placeholder="ghp_..." />
+            <p class="hint">Requiere permisos <code>repo</code> y <code>workflow</code>. Se guarda solo en tu navegador.</p>
+        </div>
+        <div class="form-group">
+            <label>Repositorio GitHub</label>
+            <input type="text" id="ghRepo" placeholder="usuario/clockify_manager" />
+        </div>
+        <div class="form-group">
+            <label>Clockify API Key</label>
+            <input type="password" id="clockifyKey" placeholder="Perfil → API en Clockify" />
+            <p class="hint">Necesario para verificar superposiciones antes de cargar.</p>
+        </div>
+        <div class="form-group">
+            <label>Clockify Workspace ID <span style="font-weight:400;color:#94a3b8">(opcional)</span></label>
+            <input type="text" id="clockifyWs" placeholder="Se auto-detecta si está vacío" />
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="closeConfig()">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveConfig()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Conflict Modal -->
+<div class="modal-bg" id="conflictModal">
+    <div class="modal modal-wide">
+        <h2>⚠ Superposición detectada</h2>
+        <p style="font-size:0.83rem;color:#475569;margin-bottom:0.5rem">
+            Las siguientes entradas se superponen con horas ya cargadas en Clockify:
+        </p>
+        <div class="conflict-list" id="conflictList"></div>
+        <p style="font-size:0.82rem;color:#475569;margin-top:0.75rem">¿Qué querés hacer?</p>
+        <div class="conflict-actions">
+            <button class="btn btn-outline" onclick="closeConflictModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="proceedLoad('skip')">Saltar conflictos</button>
+            <button class="btn btn-warn" onclick="proceedLoad('overwrite')">Sobreescribir</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TAGS = [
+    "Ejecución de Ingenieria",
+    "Gestion de Ingenieria",
+    "Revision de Ingenieria",
+    "Visita a Obra"
+];
+
+const COLORS = [
+    '#2563eb','#16a34a','#dc2626','#d97706',
+    '#7c3aed','#0891b2','#db2777','#65a30d'
+];
+
+// Proyecto → clientes válidos (del Excel exportado de Clockify)
+const PROJECTS_DATA = [
+    { project: "ALMA SADI",                  client: "DNN" },
+    { project: "Asistencia General a DNN",   client: "DNN" },
+    { project: "Asistencia General a O&M",   client: "O&M" },
+    { project: "BESS AMBA",                  client: "DNN" },
+    { project: "CTBRA",                      client: "O&M" },
+    { project: "Hidroelectricas COMAHUE",    client: "DNN" },
+    { project: "HORAS INDIRECTAS",           client: "DPI" },
+    { project: "PAMAS",                      client: "DPI" },
+    { project: "PATOC",                      client: "DPI" },
+    { project: "PATOC",                      client: "DNN" },
+    { project: "PEDAN",                      client: "DNN" },
+    { project: "PEHUC",                      client: "DNN" },
+    { project: "PEHUC",                      client: "DPI" },
+    { project: "PELEL",                      client: "O&M" },
+    { project: "PELSA",                      client: "DNN" },
+    { project: "PELSA",                      client: "DPI" },
+    { project: "PEPOM",                      client: "DNN" },
+    { project: "PETRE",                      client: "DPI" },
+    { project: "PEVI3",                      client: "DPI" },
+    { project: "PEVI3",                      client: "DNN" },
+    { project: "PEVLP",                      client: "DNN" },
+    { project: "PSANC",                      client: "DPI" },
+    { project: "PSBRA",                      client: "DNN" },
+    { project: "PSJUN",                      client: "DPI" },
+    { project: "PSLIN",                      client: "DPI" },
+    { project: "PSLMO",                      client: "DPI" },
+    { project: "PSLMO",                      client: "O&M" },
+    { project: "PSMZS",                      client: "DNN" },
+    { project: "PSSDV",                      client: "DNN" },
+    { project: "PSSDV",                      client: "DPI" },
+    { project: "PSSJS",                      client: "DPI" },
+    { project: "PSSMA",                      client: "DNN" },
+    { project: "PSSRA 150",                  client: "DPI" },
+    { project: "PSSRA 30",                   client: "DPI" },
+    { project: "PSSUL",                      client: "O&M" },
+    { project: "PSTOC",                      client: "O&M" },
+];
+
+// Lista única de proyectos (para el primer dropdown)
+const PROJECT_NAMES = [...new Set(PROJECTS_DATA.map(r => r.project))].sort();
+
+// Dado un proyecto, devuelve sus clientes válidos
+function clientsFor(projectName) {
+    return PROJECTS_DATA.filter(r => r.project === projectName).map(r => r.client);
+}
+
+let projects = [];
+let currentBlocks = [];
+let selectedDates = [];   // 'YYYY-MM-DD' strings, sorted
+let calYear, calMonth;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+window.onload = () => {
+    loadConfig();
+    const now = new Date();
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+    renderCalendar();
+    addProject();
+    addProject();
+};
+
+// ── Calendar ──────────────────────────────────────────────────────────────────
+
+const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DAY_NAMES   = ['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+
+function changeMonth(delta) {
+    calMonth += delta;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    if (calMonth < 0)  { calMonth = 11; calYear--; }
+    renderCalendar();
+}
+
+function renderCalendar() {
+    document.getElementById('calTitle').textContent = `${MONTH_NAMES[calMonth]} ${calYear}`;
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+
+    DAY_NAMES.forEach(d => {
+        const el = document.createElement('div');
+        el.className = 'cal-day-name';
+        el.textContent = d;
+        grid.appendChild(el);
+    });
+
+    const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+    const startOffset = (firstDay === 0 ? 6 : firstDay - 1); // Mon=0
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const today = fmtDate(new Date());
+
+    for (let i = 0; i < startOffset; i++) {
+        const el = document.createElement('div');
+        el.className = 'cal-day cal-empty';
+        grid.appendChild(el);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const dow = new Date(calYear, calMonth, d).getDay(); // 0=Sun,6=Sat
+        const isWeekend = dow === 0 || dow === 6;
+        const isSelected = selectedDates.includes(dateStr);
+        const isToday = dateStr === today;
+
+        const el = document.createElement('div');
+        el.className = 'cal-day' +
+            (isWeekend ? ' cal-weekend' : '') +
+            (isSelected ? ' cal-selected' : '') +
+            (isToday    ? ' cal-today'    : '');
+        el.textContent = d;
+        if (!isWeekend) el.onclick = () => toggleDate(dateStr);
+        grid.appendChild(el);
+    }
+
+    updateCalSummary();
+}
+
+function toggleDate(dateStr) {
+    const idx = selectedDates.indexOf(dateStr);
+    if (idx >= 0) selectedDates.splice(idx, 1);
+    else selectedDates.push(dateStr);
+    selectedDates.sort();
+    renderCalendar();
+}
+
+function updateCalSummary() {
+    const el = document.getElementById('calSummary');
+    if (!selectedDates.length) {
+        el.textContent = 'Hacé click en los días que trabajaste.';
+    } else {
+        const total = selectedDates.length * 8;
+        el.textContent = `${selectedDates.length} día${selectedDates.length>1?'s':''} seleccionado${selectedDates.length>1?'s':''} · ${total}h en total`;
+    }
+}
+
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+function fmtDate(d) { return d.toISOString().split('T')[0]; }
+
+// ── Projects ──────────────────────────────────────────────────────────────────
+
+function addProject() {
+    projects.push({ name: '', client: '', tag: TAGS[0], pct: 0 });
+    renderProjects();
+}
+
+function removeProject(i) {
+    projects.splice(i, 1);
+    renderProjects();
+    updateTotal();
+}
+
+function renderProjects() {
+    const c = document.getElementById('projectList');
+    c.innerHTML = '';
+    projects.forEach((p, i) => {
+        const color = COLORS[i % COLORS.length];
+        const clients = p.name ? clientsFor(p.name) : [];
+        const div = document.createElement('div');
+        div.className = 'project-card';
+        div.innerHTML = `
+            <div class="project-card-header">
+                <span style="display:flex;align-items:center;font-size:0.82rem;font-weight:600">
+                    <span class="project-dot" style="background:${color}"></span>Proyecto ${i+1}
+                </span>
+                <button class="btn btn-ghost" onclick="removeProject(${i})">✕</button>
+            </div>
+            <div class="project-fields">
+                <select onchange="onProjectChange(${i}, this.value)">
+                    <option value="">— Proyecto —</option>
+                    ${PROJECT_NAMES.map(n=>`<option value="${n}"${p.name===n?' selected':''}>${n}</option>`).join('')}
+                </select>
+                <select id="client-sel-${i}" onchange="projects[${i}].client=this.value" ${!clients.length?'disabled':''}>
+                    ${clients.length
+                        ? clients.map(cl=>`<option value="${cl}"${p.client===cl?' selected':''}>${cl}</option>`).join('')
+                        : '<option value="">— Cliente —</option>'
+                    }
+                </select>
+            </div>
+            <select class="tag-select" onchange="projects[${i}].tag=this.value">
+                ${TAGS.map(t=>`<option value="${t}"${p.tag===t?' selected':''}>${t}</option>`).join('')}
+            </select>
+            <div class="pct-row">
+                <span class="pct-label">%</span>
+                <input type="range" class="pct-slider" min="0" max="100" value="${p.pct}" id="sl-${i}"
+                    oninput="projects[${i}].pct=+this.value;document.getElementById('pn-${i}').value=this.value;updateTotal()"/>
+                <input type="number" class="pct-number" min="0" max="100" value="${p.pct}" id="pn-${i}"
+                    oninput="projects[${i}].pct=+this.value;document.getElementById('sl-${i}').value=this.value;updateTotal()"/>
+            </div>`;
+        c.appendChild(div);
+    });
+    updateTotal();
+}
+
+function onProjectChange(i, name) {
+    projects[i].name = name;
+    const clients = clientsFor(name);
+    // Auto-assign client if only one option
+    projects[i].client = clients.length === 1 ? clients[0] : '';
+    renderProjects();
+}
+
+function updateTotal() {
+    const total = projects.reduce((s,p) => s + (+p.pct||0), 0);
+    const el = document.getElementById('totalPct');
+    el.textContent = total + '%';
+    el.className = total === 100 ? 'total-ok' : 'total-err';
+}
+
+// ── Distribution ──────────────────────────────────────────────────────────────
+
+// 8 one-hour slots per day (09-13 AM, 14-18 PM)
+const HOUR_SLOTS = [
+    {start:'09:00',end:'10:00',group:'am'},{start:'10:00',end:'11:00',group:'am'},
+    {start:'11:00',end:'12:00',group:'am'},{start:'12:00',end:'13:00',group:'am'},
+    {start:'14:00',end:'15:00',group:'pm'},{start:'15:00',end:'16:00',group:'pm'},
+    {start:'16:00',end:'17:00',group:'pm'},{start:'17:00',end:'18:00',group:'pm'},
+];
+
+function slotHours(start, end) { return parseInt(end) - parseInt(start); }
+
+function mergeSlots(rawSlots) {
+    // Merge consecutive same-project slots within the same AM/PM group
+    const entries = [];
+    let cur = null;
+    for (const s of rawSlots) {
+        if (cur && cur.pidx === s.pidx && cur.group === s.group && cur.end === s.start) {
+            cur.end = s.end;
+        } else {
+            if (cur) entries.push(cur);
+            cur = {...s};
+        }
+    }
+    if (cur) entries.push(cur);
+    return entries;
+}
+
+function distribute() {
+    if (!selectedDates.length) return showToast('Seleccioná al menos un día en el calendario.', 'error');
+
+    const total = projects.reduce((s,p) => s + (+p.pct||0), 0);
+    if (total !== 100) return showToast(`Los porcentajes suman ${total}%, deben sumar 100%.`, 'error');
+
+    const valid = projects.filter(p => p.name.trim());
+    if (!valid.length) return showToast('Completá al menos un proyecto.', 'error');
+
+    // Build 1-hour raw slots for all selected days
+    const totalSlots = selectedDates.length * 8;
+    const rawSlots = [];
+    for (const date of selectedDates) {
+        const d = new Date(date + 'T12:00:00');
+        const label = `${'Dom Lun Mar Mié Jue Vie Sáb'.split(' ')[d.getDay()]} ${d.getDate()}`;
+        for (const slot of HOUR_SLOTS) {
+            rawSlots.push({ date, label, ...slot, pidx: null });
+        }
+    }
+
+    // Allocate slots per project using largest-remainder method
+    const idxs = projects.map((_,i)=>i).filter(i=>projects[i].name.trim());
+    const exact = idxs.map(i => projects[i].pct / 100 * totalSlots);
+    const floor = exact.map(Math.floor);
+    let rem = totalSlots - floor.reduce((a,b)=>a+b, 0);
+    exact.map((v,i)=>({i,r:v-floor[i]}))
+         .sort((a,b)=>b.r-a.r)
+         .slice(0,rem)
+         .forEach(({i})=>floor[i]++);
+
+    let si = 0;
+    idxs.forEach((pidx, pi) => {
+        for (let s = 0; s < floor[pi]; s++) {
+            if (si < rawSlots.length) rawSlots[si++].pidx = pidx;
+        }
+    });
+
+    // Merge consecutive same-project slots
+    const merged = mergeSlots(rawSlots.filter(s => s.pidx !== null));
+    currentBlocks = merged;
+    renderGrid(merged);
+    document.getElementById('loadBtn').disabled = false;
+    const totalH = merged.reduce((s,b) => s + slotHours(b.start, b.end), 0);
+    document.getElementById('actionsHint').textContent =
+        `${totalH}h distribuidas en ${selectedDates.length} día${selectedDates.length>1?'s':''} · ${merged.length} entradas.`;
+    showToast('Distribución generada.', 'success');
+}
+
+// ── Grid rendering ────────────────────────────────────────────────────────────
+
+function renderGrid(blocks) {
+    const grid = document.getElementById('dayGrid');
+    grid.innerHTML = '';
+
+    const uniqueDates = [...new Set(blocks.map(b=>b.date))];
+
+    if (!uniqueDates.length) {
+        grid.innerHTML = '<div class="no-dist" style="width:100%">Generá la distribución para ver las entradas.</div>';
+        return;
+    }
+
+    uniqueDates.forEach(date => {
+        const col = document.createElement('div');
+        col.className = 'day-col';
+
+        const header = document.createElement('div');
+        header.className = 'day-header';
+        header.textContent = blocks.find(b=>b.date===date)?.label || '';
+        col.appendChild(header);
+
+        const dayBlocks = blocks.filter(b=>b.date===date);
+        if (!dayBlocks.length) {
+            const empty = document.createElement('div');
+            empty.className = 'entry-empty';
+            empty.textContent = '—';
+            col.appendChild(empty);
+        } else {
+            dayBlocks.forEach(b => {
+                const p = projects[b.pidx];
+                const color = COLORS[b.pidx % COLORS.length];
+                const hrs = slotHours(b.start, b.end);
+                const card = document.createElement('div');
+                card.className = 'entry-card';
+                card.style.background = color;
+                card.style.minHeight = `${hrs * 22}px`;
+                card.innerHTML = `<span class="entry-time">${b.start}–${b.end} (${hrs}h)</span><strong>${p.name}</strong>`;
+                col.appendChild(card);
+            });
+        }
+
+        grid.appendChild(col);
+    });
+
+    // Legend & summary
+    const legend = document.getElementById('legend');
+    legend.innerHTML = '';
+    const summary = document.getElementById('hoursSummary');
+    summary.innerHTML = '';
+
+    projects.forEach((p,i) => {
+        if (!p.name) return;
+        const color = COLORS[i % COLORS.length];
+        const hrs = blocks.filter(b=>b.pidx===i).reduce((s,b)=>s+slotHours(b.start,b.end),0);
+        if (!hrs) return;
+        legend.innerHTML += `<div class="legend-item"><span class="legend-dot" style="background:${color}"></span>${p.name}${p.client?' · '+p.client:''}</div>`;
+        summary.innerHTML += `<div class="hours-chip">${p.name}<strong>${hrs}h</strong></div>`;
+    });
+}
+
+// ── Clockify API ──────────────────────────────────────────────────────────────
+
+const CLOCKIFY_API = 'https://api.clockify.me/api/v1';
+
+function clockifyFetch(apiKey, url, opts={}) {
+    return fetch(url, { ...opts, headers: { 'X-Api-Key': apiKey, 'Content-Type': 'application/json' } });
+}
+
+function toUtcIso(dateStr, timeStr) {
+    // Argentina = UTC-3: add 3h to convert local → UTC
+    const [h, m] = timeStr.split(':').map(Number);
+    let utcH = h + 3, utcDate = dateStr;
+    if (utcH >= 24) {
+        utcH -= 24;
+        const d = new Date(dateStr + 'T12:00:00Z');
+        d.setUTCDate(d.getUTCDate() + 1);
+        utcDate = d.toISOString().split('T')[0];
+    }
+    return `${utcDate}T${String(utcH).padStart(2,'0')}:${String(m).padStart(2,'0')}:00Z`;
+}
+
+async function getClockifyContext(apiKey, savedWsId) {
+    const userRes = await clockifyFetch(apiKey, `${CLOCKIFY_API}/user`);
+    if (!userRes.ok) throw new Error('API key de Clockify inválida.');
+    const user = await userRes.json();
+    const wsId = savedWsId || user.defaultWorkspace;
+    return { userId: user.id, workspaceId: wsId };
+}
+
+async function fetchExistingEntries(apiKey, wsId, userId, start, end) {
+    const entries = [];
+    let page = 1;
+    while (true) {
+        const r = await clockifyFetch(apiKey,
+            `${CLOCKIFY_API}/workspaces/${wsId}/user/${userId}/time-entries?start=${start}&end=${end}&page=${page}&page-size=50`);
+        if (!r.ok) break;
+        const batch = await r.json();
+        entries.push(...batch);
+        if (batch.length < 50) break;
+        page++;
+    }
+    return entries;
+}
+
+async function detectConflicts(apiKey, wsId, entries) {
+    const { userId, workspaceId } = await getClockifyContext(apiKey, wsId);
+    const dates = entries.map(e => e.date).sort();
+    const existing = await fetchExistingEntries(apiKey, workspaceId, userId,
+        `${dates[0]}T00:00:00Z`, `${dates[dates.length-1]}T23:59:59Z`);
+
+    const conflicts = [];
+    for (const entry of entries) {
+        const ns = toUtcIso(entry.date, entry.start);
+        const ne = toUtcIso(entry.date, entry.end);
+        for (const ex of existing) {
+            const es = ex.timeInterval?.start, ee = ex.timeInterval?.end;
+            if (!ee) continue;
+            if (ns < ee && ne > es) {
+                conflicts.push({
+                    entry,
+                    existingId: ex.id,
+                    existingDesc: ex.description || '(sin descripción)',
+                    existingStart: es.substr(11,5),
+                    existingEnd:   ee.substr(11,5),
+                });
+            }
+        }
+    }
+    return { conflicts, workspaceId };
+}
+
+async function deleteClockifyEntry(apiKey, wsId, entryId) {
+    await clockifyFetch(apiKey, `${CLOCKIFY_API}/workspaces/${wsId}/time-entries/${entryId}`, { method: 'DELETE' });
+}
+
+// ── Pending load state ─────────────────────────────────────────────────────────
+
+let _pendingLoad = null; // { entries, conflicts, workspaceId, monday }
+
+// ── Load to Clockify ──────────────────────────────────────────────────────────
+
+async function loadToClockify() {
+    const { token, repo, clockifyKey, clockifyWs } = getConfig();
+    if (!token || !repo) return showToast('Configurá el token de GitHub y el repositorio primero.', 'error');
+
+    const filled = currentBlocks.filter(b => b.pidx !== null);
+    if (!filled.length) return showToast('Generá la distribución primero.', 'error');
+
+    const entries = filled.map(b => ({ ...b, project: projects[b.pidx].name, client: projects[b.pidx].client, tag: projects[b.pidx].tag }));
+
+    document.getElementById('loadBtn').disabled = true;
+
+    // Check overlaps via Clockify API if key is configured
+    if (clockifyKey) {
+        showToast('Verificando superposiciones...', 'info');
+        try {
+            const { conflicts, workspaceId } = await detectConflicts(clockifyKey, clockifyWs, entries);
+            if (conflicts.length > 0) {
+                _pendingLoad = { entries, conflicts, workspaceId };
+                document.getElementById('loadBtn').disabled = false;
+                showConflictModal(conflicts);
+                return;
+            }
+        } catch(e) {
+            showToast('No se pudo verificar Clockify: ' + e.message, 'error');
+            document.getElementById('loadBtn').disabled = false;
+            return;
+        }
+    }
+
+    await commitAndTrigger(entries, token, repo);
+    document.getElementById('loadBtn').disabled = false;
+}
+
+async function proceedLoad(mode) {
+    closeConflictModal();
+    if (!_pendingLoad) return;
+    const { entries, conflicts, workspaceId } = _pendingLoad;
+    const { token, repo, clockifyKey } = getConfig();
+
+    let entriesToLoad = entries;
+
+    if (mode === 'overwrite') {
+        showToast('Eliminando entradas existentes...', 'info');
+        const idsToDelete = [...new Set(conflicts.map(c => c.existingId))];
+        for (const id of idsToDelete) {
+            await deleteClockifyEntry(clockifyKey, workspaceId, id);
+        }
+    } else if (mode === 'skip') {
+        const conflictingBlocks = new Set(conflicts.map(c => `${c.entry.date}|${c.entry.start}`));
+        entriesToLoad = entries.filter(e => !conflictingBlocks.has(`${e.date}|${e.start}`));
+        if (!entriesToLoad.length) {
+            showToast('Todas las entradas tenían conflictos. No se cargó nada.', 'info');
+            _pendingLoad = null;
+            return;
+        }
+    }
+
+    document.getElementById('loadBtn').disabled = true;
+    await commitAndTrigger(entriesToLoad, token, repo);
+    document.getElementById('loadBtn').disabled = false;
+    _pendingLoad = null;
+}
+
+async function commitAndTrigger(entries, token, repo) {
+    const tz = 'America/Argentina/Buenos_Aires';
+    const lines = [`timezone: "${tz}"`, 'entries:'];
+    entries.forEach(e => {
+        const p = projects[e.pidx];
+        lines.push(`  - date: "${e.date}"`);
+        lines.push(`    start: "${e.start}"`);
+        lines.push(`    end: "${e.end}"`);
+        lines.push(`    project: "${p.name}"`);
+        if (p.client) lines.push(`    client: "${p.client}"`);
+        lines.push(`    tags:`);
+        lines.push(`      - "${p.tag}"`);
+        lines.push(`    billable: true`);
+    });
+    const yaml = lines.join('\n');
+    const dateRange = selectedDates.length ? `${selectedDates[0]} al ${selectedDates[selectedDates.length-1]}` : 'selección';
+
+    showToast('Subiendo entries.yml a GitHub...', 'info');
+    try {
+        let sha;
+        const getRes = await ghFetch(token, `https://api.github.com/repos/${repo}/contents/entries.yml`);
+        if (getRes.ok) sha = (await getRes.json()).sha;
+
+        const putBody = { message: `Entries ${dateRange} [web]`, content: btoa(unescape(encodeURIComponent(yaml))) };
+        if (sha) putBody.sha = sha;
+
+        const putRes = await ghFetch(token, `https://api.github.com/repos/${repo}/contents/entries.yml`, { method: 'PUT', body: JSON.stringify(putBody) });
+        if (!putRes.ok) throw new Error(`Error al commitear: ${(await putRes.json()).message}`);
+
+        showToast('Disparando workflow...', 'info');
+        const wfRes = await ghFetch(token, `https://api.github.com/repos/${repo}/actions/workflows/log-hours.yml/dispatches`, {
+            method: 'POST',
+            body: JSON.stringify({ ref: 'main', inputs: { mode: 'batch', entries_file: 'entries.yml', dry_run: 'false' } })
+        });
+        if (!wfRes.ok) throw new Error(`Error al disparar workflow: ${(await wfRes.json()).message}`);
+
+        showToast('¡Cargado! Revisá Actions en GitHub.', 'success');
+    } catch(e) {
+        showToast(e.message, 'error');
+    }
+}
+
+function ghFetch(token, url, opts={}) {
+    return fetch(url, { ...opts, headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' } });
+}
+
+// ── Conflict modal ────────────────────────────────────────────────────────────
+
+function showConflictModal(conflicts) {
+    const list = document.getElementById('conflictList');
+    list.innerHTML = conflicts.map(c => {
+        const p = projects[c.entry.pidx];
+        return `<div class="conflict-item">
+            <div class="new">● ${c.entry.date} ${c.entry.start}-${c.entry.end} — ${p.name}</div>
+            <div class="existing">↔ Conflicto con: "${c.existingDesc}" ${c.existingStart}-${c.existingEnd} UTC</div>
+        </div>`;
+    }).join('');
+    document.getElementById('conflictModal').classList.add('open');
+}
+
+function closeConflictModal() {
+    document.getElementById('conflictModal').classList.remove('open');
+}
+
+// ── Config ────────────────────────────────────────────────────────────────────
+
+function openConfig() {
+    const c = getConfig();
+    document.getElementById('ghToken').value = c.token;
+    document.getElementById('ghRepo').value = c.repo;
+    document.getElementById('clockifyKey').value = c.clockifyKey;
+    document.getElementById('clockifyWs').value = c.clockifyWs;
+    document.getElementById('configModal').classList.add('open');
+}
+function closeConfig() { document.getElementById('configModal').classList.remove('open'); }
+function saveConfig() {
+    localStorage.setItem('gh_token',       document.getElementById('ghToken').value.trim());
+    localStorage.setItem('gh_repo',        document.getElementById('ghRepo').value.trim());
+    localStorage.setItem('clockify_key',   document.getElementById('clockifyKey').value.trim());
+    localStorage.setItem('clockify_ws',    document.getElementById('clockifyWs').value.trim());
+    closeConfig();
+    showToast('Configuración guardada.', 'success');
+}
+function getConfig() {
+    return {
+        token:       localStorage.getItem('gh_token')     || '',
+        repo:        localStorage.getItem('gh_repo')      || '',
+        clockifyKey: localStorage.getItem('clockify_key') || '',
+        clockifyWs:  localStorage.getItem('clockify_ws')  || '',
+    };
+}
+function loadConfig() {
+    const h = window.location.hostname;
+    if (h.endsWith('.github.io') && !localStorage.getItem('gh_repo')) {
+        const owner = h.replace('.github.io','');
+        const repo  = window.location.pathname.split('/')[1];
+        if (repo) localStorage.setItem('gh_repo', `${owner}/${repo}`);
+    }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+
+function showToast(msg, type='info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type}`;
+    t.style.display = 'block';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.style.display='none', 3500);
+}
+</script>
+</body>
+</html>
