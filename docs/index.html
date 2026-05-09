@@ -201,6 +201,54 @@ const COLORS = [
     '#7c3aed','#0891b2','#db2777','#65a30d'
 ];
 
+// Proyecto → clientes válidos (del Excel exportado de Clockify)
+const PROJECTS_DATA = [
+    { project: "ALMA SADI",                  client: "DNN" },
+    { project: "Asistencia General a DNN",   client: "DNN" },
+    { project: "Asistencia General a O&M",   client: "O&M" },
+    { project: "BESS AMBA",                  client: "DNN" },
+    { project: "CTBRA",                      client: "O&M" },
+    { project: "Hidroelectricas COMAHUE",    client: "DNN" },
+    { project: "HORAS INDIRECTAS",           client: "DPI" },
+    { project: "PAMAS",                      client: "DPI" },
+    { project: "PATOC",                      client: "DPI" },
+    { project: "PATOC",                      client: "DNN" },
+    { project: "PEDAN",                      client: "DNN" },
+    { project: "PEHUC",                      client: "DNN" },
+    { project: "PEHUC",                      client: "DPI" },
+    { project: "PELEL",                      client: "O&M" },
+    { project: "PELSA",                      client: "DNN" },
+    { project: "PELSA",                      client: "DPI" },
+    { project: "PEPOM",                      client: "DNN" },
+    { project: "PETRE",                      client: "DPI" },
+    { project: "PEVI3",                      client: "DPI" },
+    { project: "PEVI3",                      client: "DNN" },
+    { project: "PEVLP",                      client: "DNN" },
+    { project: "PSANC",                      client: "DPI" },
+    { project: "PSBRA",                      client: "DNN" },
+    { project: "PSJUN",                      client: "DPI" },
+    { project: "PSLIN",                      client: "DPI" },
+    { project: "PSLMO",                      client: "DPI" },
+    { project: "PSLMO",                      client: "O&M" },
+    { project: "PSMZS",                      client: "DNN" },
+    { project: "PSSDV",                      client: "DNN" },
+    { project: "PSSDV",                      client: "DPI" },
+    { project: "PSSJS",                      client: "DPI" },
+    { project: "PSSMA",                      client: "DNN" },
+    { project: "PSSRA 150",                  client: "DPI" },
+    { project: "PSSRA 30",                   client: "DPI" },
+    { project: "PSSUL",                      client: "O&M" },
+    { project: "PSTOC",                      client: "O&M" },
+];
+
+// Lista única de proyectos (para el primer dropdown)
+const PROJECT_NAMES = [...new Set(PROJECTS_DATA.map(r => r.project))].sort();
+
+// Dado un proyecto, devuelve sus clientes válidos
+function clientsFor(projectName) {
+    return PROJECTS_DATA.filter(r => r.project === projectName).map(r => r.client);
+}
+
 let projects = [];
 let currentBlocks = [];
 
@@ -261,6 +309,7 @@ function renderProjects() {
     c.innerHTML = '';
     projects.forEach((p, i) => {
         const color = COLORS[i % COLORS.length];
+        const clients = p.name ? clientsFor(p.name) : [];
         const div = document.createElement('div');
         div.className = 'project-card';
         div.innerHTML = `
@@ -271,8 +320,16 @@ function renderProjects() {
                 <button class="btn btn-ghost" onclick="removeProject(${i})">✕</button>
             </div>
             <div class="project-fields">
-                <input placeholder="Proyecto" value="${p.name}" oninput="projects[${i}].name=this.value" />
-                <input placeholder="Cliente" value="${p.client}" oninput="projects[${i}].client=this.value" />
+                <select onchange="onProjectChange(${i}, this.value)">
+                    <option value="">— Proyecto —</option>
+                    ${PROJECT_NAMES.map(n=>`<option value="${n}"${p.name===n?' selected':''}>${n}</option>`).join('')}
+                </select>
+                <select id="client-sel-${i}" onchange="projects[${i}].client=this.value" ${!clients.length?'disabled':''}>
+                    ${clients.length
+                        ? clients.map(cl=>`<option value="${cl}"${p.client===cl?' selected':''}>${cl}</option>`).join('')
+                        : '<option value="">— Cliente —</option>'
+                    }
+                </select>
             </div>
             <select class="tag-select" onchange="projects[${i}].tag=this.value">
                 ${TAGS.map(t=>`<option value="${t}"${p.tag===t?' selected':''}>${t}</option>`).join('')}
@@ -287,6 +344,14 @@ function renderProjects() {
         c.appendChild(div);
     });
     updateTotal();
+}
+
+function onProjectChange(i, name) {
+    projects[i].name = name;
+    const clients = clientsFor(name);
+    // Auto-assign client if only one option
+    projects[i].client = clients.length === 1 ? clients[0] : '';
+    renderProjects();
 }
 
 function updateTotal() {
