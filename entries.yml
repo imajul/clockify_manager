@@ -1,0 +1,13 @@
+# Example batch entries file for Clockify
+# Copy to entries.yml and fill in your real values.
+# Run via GitHub Actions (batch mode) or locally:
+#   python scripts/log_hours.py batch --file entries.yml
+
+entries:
+  - date: "2026-05-08"
+    start: "09:00"
+    end: "12:30"
+    description: "Backend API development"
+    project: "BESS AMBA"
+    billable: true
+

@@ -1,6 +1,4 @@
 # Weekly schedule for automatic Clockify uploads
-# Copy to weekly_schedule.yml and customize with your real projects and clients.
-#
 # Times are interpreted in the specified timezone and converted to UTC automatically.
 
 timezone: "America/Argentina/Buenos_Aires"
@@ -8,86 +6,9 @@ timezone: "America/Argentina/Buenos_Aires"
 # ── Default schedule ───────────────────────────────────────────────────────────
 # Applied every week unless a specific week overrides a day.
 # Omit a day or set it to [] to mark it as a day off.
+# Optional fields per entry: client, tags, billable
 
-default:
-  monday:
-    - start: "09:00"
-      end: "13:00"
-      description: "Desarrollo"
-      project: "PSLMO"
-      client: "O&M"         # narrows the project lookup when the name is shared across clients
-      billable: true
-      tags:
-        - "Desarrollo"
-        - "Backend"
-
-    - start: "14:00"
-      end: "18:00"
-      description: "Relevamiento"
-      project: "PSLMO"
-      client: "DPI"
-      billable: true
-      tags:
-        - "Relevamiento"
-
-  tuesday:
-    - start: "09:00"
-      end: "18:00"
-      description: "Desarrollo"
-      project: "PSLMO"
-      client: "O&M"
-      billable: true
-      tags:
-        - "Desarrollo"
-
-  wednesday:
-    - start: "09:00"
-      end: "13:00"
-      description: "Desarrollo"
-      project: "PSLMO"
-      client: "O&M"
-      billable: true
-      tags:
-        - "Desarrollo"
-
-    - start: "14:00"
-      end: "18:00"
-      description: "Reuniones y planificación"
-      project: "PSLMO"
-      client: "DPI"
-      billable: false
-      tags:
-        - "Gestión"
-
-  thursday:
-    - start: "09:00"
-      end: "18:00"
-      description: "Desarrollo"
-      project: "PSLMO"
-      client: "O&M"
-      billable: true
-      tags:
-        - "Desarrollo"
-        - "Backend"
-
-  friday:
-    - start: "09:00"
-      end: "13:00"
-      description: "Desarrollo"
-      project: "PSLMO"
-      client: "O&M"
-      billable: true
-      tags:
-        - "Desarrollo"
-
-    - start: "14:00"
-      end: "16:00"
-      description: "Cierre de semana"
-      project: "PSLMO"
-      client: "DPI"
-      billable: false
-      tags:
-        - "Gestión"
+default: {}
 
 
 # ── Overrides por semana ───────────────────────────────────────────────────────
@@ -95,16 +16,22 @@ default:
 # Clave: lunes de la semana en formato YYYY-MM-DD.
 
 weeks:
-  "2026-05-11":
-    wednesday: []    # feriado
-
-    friday:
+  "2026-05-04":
+    monday:
       - start: "09:00"
-        end: "14:00"
-        description: "Entrega sprint"
-        project: "PSLMO"
-        client: "DPI"
+        end: "13:00"
+        description: "Desarrollo"
+        project: "BESS AMBA"
         billable: true
-        tags:
-          - "Desarrollo"
-          - "Entrega"
+      - start: "14:00"
+        end: "18:00"
+        description: "Reuniones y planificación"
+        project: "CTBRA"
+        billable: false
+
+    tuesday:
+      - start: "09:00"
+        end: "18:00"
+        description: "Desarrollo"
+        project: "BESS SADI"
+        billable: true
