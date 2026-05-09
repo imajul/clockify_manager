@@ -4,25 +4,44 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Mode: 'single' entry or 'batch' from file"
+        description: "Mode"
         required: true
-        default: single
+        default: weekly
         type: choice
         options:
+          - weekly
           - single
           - batch
 
-      # ── Single-entry inputs ──────────────────────────────────────────────
+      # ── Weekly mode ──────────────────────────────────────────────────────────
+      week_start:
+        description: "Monday of target week (YYYY-MM-DD) — weekly mode. Defaults to current week."
+        required: false
+        default: ""
+      schedule_file:
+        description: "Path to schedule file — weekly mode"
+        required: false
+        default: weekly_schedule.yml
+      dry_run:
+        description: "Dry run (preview entries without creating them)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+      # ── Single-entry mode ────────────────────────────────────────────────────
       date:
         description: "Date (YYYY-MM-DD) — single mode"
         required: false
         default: ""
       start_time:
-        description: "Start time (HH:MM, UTC) — single mode"
+        description: "Start time (HH:MM) — single mode"
         required: false
         default: ""
       end_time:
-        description: "End time (HH:MM, UTC) — single mode"
+        description: "End time (HH:MM) — single mode"
         required: false
         default: ""
       description:
@@ -30,7 +49,7 @@ on:
         required: false
         default: ""
       project:
-        description: "Project name (optional) — single mode"
+        description: "Project name — single mode"
         required: false
         default: ""
       billable:
@@ -42,7 +61,7 @@ on:
           - "false"
           - "true"
 
-      # ── Batch-mode input ─────────────────────────────────────────────────
+      # ── Batch mode ───────────────────────────────────────────────────────────
       entries_file:
         description: "Path to YAML entries file — batch mode"
         required: false
@@ -63,7 +82,25 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install requests pyyaml
+        run: pip install requests pyyaml tzdata
+
+      - name: Log weekly entries
+        if: inputs.mode == 'weekly'
+        env:
+          CLOCKIFY_API_KEY: ${{ secrets.CLOCKIFY_API_KEY }}
+          CLOCKIFY_WORKSPACE_ID: ${{ secrets.CLOCKIFY_WORKSPACE_ID }}
+        run: |
+          ARGS="--schedule '${{ inputs.schedule_file }}'"
+
+          if [ -n "${{ inputs.week_start }}" ]; then
+            ARGS="$ARGS --week '${{ inputs.week_start }}'"
+          fi
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+
+          eval python scripts/log_hours.py weekly $ARGS
 
       - name: Log single entry
         if: inputs.mode == 'single'
@@ -92,4 +129,10 @@ jobs:
           CLOCKIFY_API_KEY: ${{ secrets.CLOCKIFY_API_KEY }}
           CLOCKIFY_WORKSPACE_ID: ${{ secrets.CLOCKIFY_WORKSPACE_ID }}
         run: |
-          python scripts/log_hours.py batch --file "${{ inputs.entries_file }}"
+          ARGS="--file '${{ inputs.entries_file }}'"
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+
+          eval python scripts/log_hours.py batch $ARGS
