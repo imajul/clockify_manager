@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clockify Manager</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; }
+
+        header { background: #1e293b; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.01em; }
+
+        .main { display: grid; grid-template-columns: 380px 1fr; gap: 1.25rem; padding: 1.25rem; min-height: calc(100vh - 56px); }
+
+        .card { background: white; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+        .section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 0.75rem; }
+
+        .week-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; color: #1e293b; }
+
+        .divider { height: 1px; background: #f1f5f9; margin: 1.1rem 0; }
+
+        .project-card { background: #f8fafc; border-radius: 10px; padding: 0.85rem; margin-bottom: 0.6rem; border: 1px solid #e2e8f0; }
+        .project-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+        .project-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; flex-shrink: 0; }
+        .project-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-bottom: 0.5rem; }
+        .project-fields input, .project-fields select, .tag-select {
+            padding: 0.38rem 0.55rem; border: 1px solid #e2e8f0; border-radius: 6px;
+            font-size: 0.82rem; width: 100%; background: white; color: #1e293b;
+        }
+        .tag-select { margin-bottom: 0.5rem; }
+        .pct-row { display: flex; align-items: center; gap: 0.6rem; }
+        .pct-label { font-size: 0.72rem; color: #94a3b8; width: 20px; flex-shrink: 0; }
+        .pct-slider { flex: 1; accent-color: #2563eb; height: 4px; }
+        .pct-number { width: 52px; padding: 0.3rem 0.4rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.82rem; text-align: center; }
+
+        .total-bar { margin-top: 0.85rem; padding: 0.65rem 0.85rem; background: #f8fafc; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0; }
+        .total-ok  { color: #16a34a; font-weight: 700; font-size: 0.9rem; }
+        .total-err { color: #dc2626; font-weight: 700; font-size: 0.9rem; }
+
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: opacity .15s; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+        .btn-success { background: #16a34a; color: white; }
+        .btn-success:hover:not(:disabled) { background: #15803d; }
+        .btn-outline { background: white; border: 1px solid #e2e8f0; color: #374151; }
+        .btn-outline:hover { background: #f8fafc; }
+        .btn-ghost  { background: transparent; color: #dc2626; font-size: 0.8rem; padding: 0.25rem 0.5rem; }
+        .btn-ghost:hover { background: #fee2e2; border-radius: 6px; }
+        .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+
+        /* Grid */
+        .grid-wrap { overflow-x: auto; }
+        .day-grid { display: grid; grid-template-columns: 48px repeat(5, 1fr); gap: 5px; min-width: 460px; }
+        .day-header { text-align: center; font-size: 0.72rem; font-weight: 700; color: #64748b; padding: 0.4rem 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .time-label { font-size: 0.68rem; color: #94a3b8; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; }
+        .block { border-radius: 8px; padding: 0.55rem 0.4rem; min-height: 76px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-size: 0.73rem; font-weight: 500; }
+        .block-empty { background: #f1f5f9; color: #cbd5e1; border: 1.5px dashed #e2e8f0; }
+        .block-project { color: white; }
+
+        .legend { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+        .legend-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: #475569; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+        .hours-summary { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+        .hours-chip { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px; padding: 0.35rem 0.65rem; font-size: 0.78rem; display: flex; gap: 0.5rem; align-items: center; }
+        .hours-chip strong { color: #2563eb; }
+
+        .actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; justify-content: flex-end; align-items: center; }
+        .actions-hint { font-size: 0.75rem; color: #94a3b8; flex: 1; }
+
+        /* Modal */
+        .modal-bg { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 100; justify-content: center; align-items: center; }
+        .modal-bg.open { display: flex; }
+        .modal { background: white; border-radius: 14px; padding: 1.5rem; width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        .modal h2 { font-size: 1rem; margin-bottom: 1.1rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.78rem; font-weight: 600; color: #64748b; margin-bottom: 0.35rem; }
+        .form-group input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; }
+        .form-group .hint { font-size: 0.72rem; color: #94a3b8; margin-top: 0.3rem; }
+        .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.1rem; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; padding: 0.7rem 1.1rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; z-index: 200; display: none; max-width: 320px; }
+        .toast.success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .toast.error   { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+        .toast.info    { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+
+        .no-dist { color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 3rem 1rem; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>⏱ Clockify Manager</h1>
+    <button class="btn btn-outline btn-sm" onclick="openConfig()">⚙ Configuración</button>
+</header>
+
+<div class="main">
+
+    <!-- LEFT PANEL -->
+    <div>
+        <div class="card">
+            <div class="section-label">Semana</div>
+            <input type="week" id="weekInput" class="week-input" />
+
+            <div class="divider"></div>
+
+            <div class="section-label">Proyectos</div>
+            <div id="projectList"></div>
+            <button class="btn btn-outline btn-sm" onclick="addProject()" style="width:100%;margin-top:0.1rem">
+                + Agregar proyecto
+            </button>
+
+            <div class="total-bar">
+                <span style="font-size:0.82rem;color:#64748b">Total asignado</span>
+                <span id="totalPct" class="total-err">0%</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <button class="btn btn-primary" style="width:100%" onclick="distribute()">
+                Generar distribución →
+            </button>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="card">
+        <div class="section-label">Distribución semanal</div>
+
+        <div class="grid-wrap">
+            <div class="day-grid" id="dayGrid">
+                <div></div>
+                <div class="day-header">Lun</div>
+                <div class="day-header">Mar</div>
+                <div class="day-header">Mié</div>
+                <div class="day-header">Jue</div>
+                <div class="day-header">Vie</div>
+                <div class="time-label">AM</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="time-label">PM</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+                <div class="block block-empty">—</div>
+            </div>
+        </div>
+
+        <div class="legend" id="legend"></div>
+        <div class="hours-summary" id="hoursSummary"></div>
+
+        <div class="actions">
+            <span class="actions-hint" id="actionsHint">Generá la distribución para habilitar la carga.</span>
+            <button class="btn btn-success" onclick="loadToClockify()" id="loadBtn" disabled>
+                Cargar a Clockify
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Config Modal -->
+<div class="modal-bg" id="configModal">
+    <div class="modal">
+        <h2>⚙ Configuración</h2>
+        <div class="form-group">
+            <label>GitHub Personal Access Token</label>
+            <input type="password" id="ghToken" placeholder="ghp_..." />
+            <p class="hint">Requiere permisos <code>repo</code> y <code>workflow</code>. Se guarda solo en tu navegador.</p>
+        </div>
+        <div class="form-group">
+            <label>Repositorio</label>
+            <input type="text" id="ghRepo" placeholder="usuario/clockify_manager" />
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="closeConfig()">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveConfig()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TAGS = [
+    "Ejecución de Ingenieria",
+    "Gestion de Ingenieria",
+    "Revision de Ingenieria",
+    "Visita a Obra"
+];
+
+const COLORS = [
+    '#2563eb','#16a34a','#dc2626','#d97706',
+    '#7c3aed','#0891b2','#db2777','#65a30d'
+];
+
+let projects = [];
+let currentBlocks = [];
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+window.onload = () => {
+    loadConfig();
+    setCurrentWeek();
+    addProject();
+    addProject();
+};
+
+function setCurrentWeek() {
+    const today = new Date();
+    const day = today.getDay() || 7;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - day + 1);
+    const y = monday.getFullYear();
+    const w = isoWeek(monday);
+    document.getElementById('weekInput').value = `${y}-W${String(w).padStart(2,'0')}`;
+}
+
+function isoWeek(d) {
+    const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+    const year = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+    return Math.ceil((((tmp - year) / 86400000) + 1) / 7);
+}
+
+function getMondayFromInput() {
+    const val = document.getElementById('weekInput').value;
+    if (!val) return null;
+    const [year, week] = val.split('-W').map(Number);
+    const jan4 = new Date(year, 0, 4);
+    const monday = new Date(jan4);
+    monday.setDate(jan4.getDate() - (jan4.getDay() || 7) + 1 + (week - 1) * 7);
+    return monday;
+}
+
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+function fmtDate(d) { return d.toISOString().split('T')[0]; }
+
+// ── Projects ──────────────────────────────────────────────────────────────────
+
+function addProject() {
+    projects.push({ name: '', client: '', tag: TAGS[0], pct: 0 });
+    renderProjects();
+}
+
+function removeProject(i) {
+    projects.splice(i, 1);
+    renderProjects();
+    updateTotal();
+}
+
+function renderProjects() {
+    const c = document.getElementById('projectList');
+    c.innerHTML = '';
+    projects.forEach((p, i) => {
+        const color = COLORS[i % COLORS.length];
+        const div = document.createElement('div');
+        div.className = 'project-card';
+        div.innerHTML = `
+            <div class="project-card-header">
+                <span style="display:flex;align-items:center;font-size:0.82rem;font-weight:600">
+                    <span class="project-dot" style="background:${color}"></span>Proyecto ${i+1}
+                </span>
+                <button class="btn btn-ghost" onclick="removeProject(${i})">✕</button>
+            </div>
+            <div class="project-fields">
+                <input placeholder="Proyecto" value="${p.name}" oninput="projects[${i}].name=this.value" />
+                <input placeholder="Cliente" value="${p.client}" oninput="projects[${i}].client=this.value" />
+            </div>
+            <select class="tag-select" onchange="projects[${i}].tag=this.value">
+                ${TAGS.map(t=>`<option value="${t}"${p.tag===t?' selected':''}>${t}</option>`).join('')}
+            </select>
+            <div class="pct-row">
+                <span class="pct-label">%</span>
+                <input type="range" class="pct-slider" min="0" max="100" value="${p.pct}" id="sl-${i}"
+                    oninput="projects[${i}].pct=+this.value;document.getElementById('pn-${i}').value=this.value;updateTotal()"/>
+                <input type="number" class="pct-number" min="0" max="100" value="${p.pct}" id="pn-${i}"
+                    oninput="projects[${i}].pct=+this.value;document.getElementById('sl-${i}').value=this.value;updateTotal()"/>
+            </div>`;
+        c.appendChild(div);
+    });
+    updateTotal();
+}
+
+function updateTotal() {
+    const total = projects.reduce((s,p) => s + (+p.pct||0), 0);
+    const el = document.getElementById('totalPct');
+    el.textContent = total + '%';
+    el.className = total === 100 ? 'total-ok' : 'total-err';
+}
+
+// ── Distribution ──────────────────────────────────────────────────────────────
+
+function distribute() {
+    const monday = getMondayFromInput();
+    if (!monday) return showToast('Seleccioná una semana.', 'error');
+
+    const total = projects.reduce((s,p) => s + (+p.pct||0), 0);
+    if (total !== 100) return showToast(`Los porcentajes suman ${total}%, deben sumar 100%.`, 'error');
+
+    const valid = projects.filter(p => p.name.trim());
+    if (!valid.length) return showToast('Completá al menos un proyecto.', 'error');
+
+    // 10 half-day blocks (AM/PM × 5 days = 40h total)
+    const DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
+    const blocks = [];
+    for (let d = 0; d < 5; d++) {
+        const date = fmtDate(addDays(monday, d));
+        blocks.push({ date, day: DAYS[d], start: '09:00', end: '13:00', pidx: null });
+        blocks.push({ date, day: DAYS[d], start: '14:00', end: '18:00', pidx: null });
+    }
+
+    // Allocate blocks per project using largest-remainder method
+    const idxs = projects.map((_,i)=>i).filter(i=>projects[i].name.trim());
+    const exact = idxs.map(i => projects[i].pct / 100 * 10);
+    const floor = exact.map(Math.floor);
+    let rem = 10 - floor.reduce((a,b)=>a+b, 0);
+    exact.map((v,i)=>({i,r:v-floor[i]}))
+         .sort((a,b)=>b.r-a.r)
+         .slice(0,rem)
+         .forEach(({i})=>floor[i]++);
+
+    let bi = 0;
+    idxs.forEach((pidx, pi) => {
+        for (let b = 0; b < floor[pi]; b++) {
+            if (bi < blocks.length) blocks[bi++].pidx = pidx;
+        }
+    });
+
+    currentBlocks = blocks;
+    renderGrid(blocks);
+    document.getElementById('loadBtn').disabled = false;
+    document.getElementById('actionsHint').textContent = `${blocks.filter(b=>b.pidx!==null).length * 4}h distribuidas en ${blocks.filter(b=>b.pidx!==null).length} bloques.`;
+    showToast('Distribución generada.', 'success');
+}
+
+// ── Grid rendering ────────────────────────────────────────────────────────────
+
+function renderGrid(blocks) {
+    const grid = document.getElementById('dayGrid');
+    grid.innerHTML = '';
+
+    const addEl = (tag, cls, html='') => {
+        const e = document.createElement(tag);
+        e.className = cls;
+        e.innerHTML = html;
+        grid.appendChild(e);
+        return e;
+    };
+
+    const DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
+    addEl('div','');
+    DAYS.forEach(d => addEl('div','day-header',d));
+
+    ['09:00','14:00'].forEach((slot, si) => {
+        addEl('div','time-label', si===0?'AM':'PM');
+        for (let d = 0; d < 5; d++) {
+            const b = blocks.find(b => dayIdx(b.date)===d && b.start===slot);
+            if (!b || b.pidx === null) {
+                addEl('div','block block-empty','—');
+            } else {
+                const p = projects[b.pidx];
+                const color = COLORS[b.pidx % COLORS.length];
+                const el = addEl('div','block block-project',
+                    `<strong style="font-size:0.78rem">${p.name}</strong><br>
+                     <span style="opacity:.8;font-size:0.68rem">${p.client||''}</span>`);
+                el.style.background = color;
+            }
+        }
+    });
+
+    // Legend
+    const legend = document.getElementById('legend');
+    legend.innerHTML = '';
+    const summary = document.getElementById('hoursSummary');
+    summary.innerHTML = '';
+
+    projects.forEach((p,i) => {
+        if (!p.name) return;
+        const color = COLORS[i % COLORS.length];
+        const hrs = blocks.filter(b=>b.pidx===i).length * 4;
+        legend.innerHTML += `<div class="legend-item"><span class="legend-dot" style="background:${color}"></span>${p.name}${p.client?' · '+p.client:''}</div>`;
+        summary.innerHTML += `<div class="hours-chip">${p.name}<strong>${hrs}h</strong></div>`;
+    });
+}
+
+function dayIdx(dateStr) {
+    const d = new Date(dateStr + 'T12:00:00');
+    return (d.getDay() + 6) % 7;
+}
+
+// ── Load to Clockify ──────────────────────────────────────────────────────────
+
+async function loadToClockify() {
+    const { token, repo } = getConfig();
+    if (!token || !repo) return showToast('Configurá el token y repositorio primero.', 'error');
+
+    const filled = currentBlocks.filter(b => b.pidx !== null);
+    if (!filled.length) return showToast('Generá la distribución primero.', 'error');
+
+    const monday = getMondayFromInput();
+    const tz = 'America/Argentina/Buenos_Aires';
+
+    // Build entries YAML
+    const lines = [`timezone: "${tz}"`, 'entries:'];
+    filled.forEach(b => {
+        const p = projects[b.pidx];
+        lines.push(`  - date: "${b.date}"`);
+        lines.push(`    start: "${b.start}"`);
+        lines.push(`    end: "${b.end}"`);
+        lines.push(`    project: "${p.name}"`);
+        if (p.client) lines.push(`    client: "${p.client}"`);
+        lines.push(`    tags:`);
+        lines.push(`      - "${p.tag}"`);
+        lines.push(`    billable: true`);
+    });
+    const yaml = lines.join('\n');
+
+    document.getElementById('loadBtn').disabled = true;
+    showToast('Subiendo entries.yml a GitHub...', 'info');
+
+    try {
+        // Get current SHA if file exists
+        let sha;
+        const getRes = await ghFetch(token, `https://api.github.com/repos/${repo}/contents/entries.yml`);
+        if (getRes.ok) sha = (await getRes.json()).sha;
+
+        // Commit file
+        const putBody = {
+            message: `Weekly entries for ${fmtDate(monday)} [web]`,
+            content: btoa(unescape(encodeURIComponent(yaml))),
+        };
+        if (sha) putBody.sha = sha;
+
+        const putRes = await ghFetch(token, `https://api.github.com/repos/${repo}/contents/entries.yml`, {
+            method: 'PUT', body: JSON.stringify(putBody)
+        });
+        if (!putRes.ok) throw new Error(`Error al commitear: ${(await putRes.json()).message}`);
+
+        showToast('Disparando workflow...', 'info');
+
+        // Trigger workflow
+        const wfRes = await ghFetch(token, `https://api.github.com/repos/${repo}/actions/workflows/log-hours.yml/dispatches`, {
+            method: 'POST',
+            body: JSON.stringify({ ref: 'main', inputs: { mode: 'batch', entries_file: 'entries.yml', dry_run: 'false' } })
+        });
+        if (!wfRes.ok) throw new Error(`Error al disparar workflow: ${(await wfRes.json()).message}`);
+
+        showToast('¡Cargado! Revisá Actions en GitHub.', 'success');
+    } catch(e) {
+        showToast(e.message, 'error');
+    } finally {
+        document.getElementById('loadBtn').disabled = false;
+    }
+}
+
+function ghFetch(token, url, opts={}) {
+    return fetch(url, {
+        ...opts,
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }
+    });
+}
+
+// ── Config ────────────────────────────────────────────────────────────────────
+
+function openConfig() {
+    const c = getConfig();
+    document.getElementById('ghToken').value = c.token;
+    document.getElementById('ghRepo').value = c.repo;
+    document.getElementById('configModal').classList.add('open');
+}
+function closeConfig() { document.getElementById('configModal').classList.remove('open'); }
+function saveConfig() {
+    localStorage.setItem('gh_token', document.getElementById('ghToken').value.trim());
+    localStorage.setItem('gh_repo', document.getElementById('ghRepo').value.trim());
+    closeConfig();
+    showToast('Configuración guardada.', 'success');
+}
+function getConfig() {
+    return { token: localStorage.getItem('gh_token')||'', repo: localStorage.getItem('gh_repo')||'' };
+}
+function loadConfig() {
+    const h = window.location.hostname;
+    if (h.endsWith('.github.io') && !localStorage.getItem('gh_repo')) {
+        const owner = h.replace('.github.io','');
+        const repo  = window.location.pathname.split('/')[1];
+        if (repo) localStorage.setItem('gh_repo', `${owner}/${repo}`);
+    }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+
+function showToast(msg, type='info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type}`;
+    t.style.display = 'block';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.style.display='none', 3500);
+}
+</script>
+</body>
+</html>
