@@ -16,9 +16,10 @@ Herramienta para registrar horas en [Clockify](https://clockify.me) desde una in
 8. [Paso 6 — Habilitar GitHub Pages](#8-paso-6--habilitar-github-pages)
 9. [Paso 7 — Configurar la interfaz web](#9-paso-7--configurar-la-interfaz-web)
 10. [Cómo usar la interfaz web](#10-cómo-usar-la-interfaz-web)
-11. [Cargar horas desde GitHub Actions](#11-cargar-horas-desde-github-actions)
-12. [Configurar el schedule semanal](#12-configurar-el-schedule-semanal)
-13. [Uso local (Python)](#13-uso-local-python)
+11. [Actualizar la lista de proyectos](#11-actualizar-la-lista-de-proyectos)
+12. [Cargar horas desde GitHub Actions](#12-cargar-horas-desde-github-actions)
+13. [Configurar el schedule semanal](#13-configurar-el-schedule-semanal)
+14. [Uso local (Python)](#14-uso-local-python)
 
 ---
 
@@ -188,7 +189,30 @@ Cada día laboral tiene **8 horas** distribuidas en dos tramos: mañana (09:00�
 
 ---
 
-## 11. Cargar horas desde GitHub Actions
+## 11. Actualizar la lista de proyectos
+
+La interfaz web carga los proyectos y clientes disponibles desde el archivo `docs/projects.json`, que se genera automáticamente a partir de un Excel exportado de Clockify.
+
+### Exportar el Excel desde Clockify
+
+1. En Clockify, andá a **Projects** (menú lateral).
+2. Hacé clic en el ícono de exportación (arriba a la derecha) → **Export as Excel**.
+3. El archivo descargado tiene las columnas **Name** (proyecto) y **Client** (cliente), que es exactamente el formato que espera el script.
+
+### Subir el Excel al repositorio
+
+1. En tu repositorio de GitHub, hacé clic en **Add file → Upload files**.
+2. Subí el archivo con el nombre exacto **`projects.xlsx`** (en la raíz del repositorio).
+3. Hacé clic en **Commit changes** → **Commit directly to the `main` branch**.
+
+Eso es todo. El workflow **Convert Projects Excel to JSON** se dispara automáticamente, convierte el Excel al archivo `docs/projects.json` y hace el commit. En la próxima apertura de la interfaz web ya aparecen los proyectos actualizados.
+
+> Si subís el Excel con otro nombre, el workflow no se dispara. El nombre debe ser exactamente `projects.xlsx`.
+
+---
+
+## 12. Cargar horas desde GitHub Actions
+
 
 También podés disparar el workflow manualmente desde GitHub para casos puntuales.
 
@@ -248,7 +272,7 @@ entries:
 
 ---
 
-## 12. Configurar el schedule semanal
+## 13. Configurar el schedule semanal
 
 El archivo `weekly_schedule.yml` define un horario recurrente que se aplica semana a semana. Es útil si tenés una distribución fija de proyectos.
 
@@ -318,7 +342,7 @@ weeks:
 
 ---
 
-## 13. Uso local (Python)
+## 14. Uso local (Python)
 
 Si preferís ejecutar el script directamente desde tu computadora sin GitHub Actions:
 
