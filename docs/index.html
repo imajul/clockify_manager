@@ -755,8 +755,12 @@ async function commitAndTrigger(entries, token, repo) {
         lines.push(`    end: "${e.end}"`);
         lines.push(`    project: "${p.name}"`);
         if (p.client) lines.push(`    client: "${p.client}"`);
-        lines.push(`    tags:`);
-        lines.push(`      - "${p.tag}"`);
+        if (p.name === 'HORAS INDIRECTAS') {
+            lines.push(`    task: "${p.tag}"`);
+        } else {
+            lines.push(`    tags:`);
+            lines.push(`      - "${p.tag}"`);
+        }
         lines.push(`    billable: true`);
     });
     const yaml = lines.join('\n');

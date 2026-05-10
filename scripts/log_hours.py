@@ -44,6 +44,7 @@ def get_workspace_id(api_key: str, workspace_id: str | None) -> str:
 _client_cache: dict[str, str] = {}   # name → id
 _project_cache: dict[str, str] = {}  # "name|client_id" → id
 _tag_cache: dict[str, str] = {}      # name → id
+_task_cache: dict[str, str] = {}     # "project_id|task_name" → id
 
 
 def find_client_id(api_key: str, workspace_id: str, client_name: str) -> str:
@@ -112,6 +113,23 @@ def find_tag_ids(api_key: str, workspace_id: str, tag_names: list[str]) -> list[
     return ids
 
 
+def find_task_id(api_key: str, workspace_id: str, project_id: str, task_name: str) -> str:
+    key = f"{project_id}|{task_name.lower()}"
+    if key in _task_cache:
+        return _task_cache[key]
+    resp = requests.get(
+        f"{CLOCKIFY_API_BASE}/workspaces/{workspace_id}/projects/{project_id}/tasks",
+        headers=get_headers(api_key),
+        params={"name": task_name},
+    )
+    resp.raise_for_status()
+    matched = [t for t in resp.json() if t["name"].lower() == task_name.lower()]
+    if not matched:
+        sys.exit(f"Task '{task_name}' not found in project '{project_id}'.")
+    _task_cache[key] = matched[0]["id"]
+    return _task_cache[key]
+
+
 def create_entry(
     api_key: str,
     workspace_id: str,
@@ -121,12 +139,15 @@ def create_entry(
     project_id: str | None = None,
     billable: bool = False,
     tag_ids: list[str] | None = None,
+    task_id: str | None = None,
 ) -> dict:
     payload = {"start": start, "end": end, "description": description, "billable": billable}
     if project_id:
         payload["projectId"] = project_id
     if tag_ids:
         payload["tagIds"] = tag_ids
+    if task_id:
+        payload["taskId"] = task_id
 
     resp = requests.post(
         f"{CLOCKIFY_API_BASE}/workspaces/{workspace_id}/time-entries",
@@ -189,6 +210,8 @@ def process_entry(
     tag_label = ""
     if tags := entry.get("tags"):
         tag_label = f" | tags={','.join(tags)}"
+    if task := entry.get("task"):
+        tag_label = f" | task={task}"
 
     label = (
         f"  {'[DRY]' if dry_run else '[OK] '} "
@@ -213,6 +236,13 @@ def process_entry(
     if tag_names := entry.get("tags"):
         resolved_tag_ids += find_tag_ids(api_key, workspace_id, tag_names)
 
+    # Resolve task name to ID (tasks live inside a project)
+    resolved_task_id: str | None = None
+    if task_name := entry.get("task"):
+        if not project_id:
+            sys.exit(f"Entry has 'task' but no project — cannot resolve task '{task_name}'.")
+        resolved_task_id = find_task_id(api_key, workspace_id, project_id, task_name)
+
     result = create_entry(
         api_key=api_key,
         workspace_id=workspace_id,
@@ -222,6 +252,7 @@ def process_entry(
         project_id=project_id,
         billable=entry.get("billable", False),
         tag_ids=resolved_tag_ids or None,
+        task_id=resolved_task_id,
     )
     print(f"{label} | id={result['id']}")
 
