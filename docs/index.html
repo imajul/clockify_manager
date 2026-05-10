@@ -253,6 +253,16 @@ const TAGS = [
     "Visita a Obra"
 ];
 
+const TAGS_INDIRECTAS = [
+    "Licencia / Vacaciones",
+    "Capacitación",
+    "Procesos / Otros"
+];
+
+function tagsFor(projectName) {
+    return projectName === 'HORAS INDIRECTAS' ? TAGS_INDIRECTAS : TAGS;
+}
+
 const COLORS = [
     '#2563eb','#16a34a','#dc2626','#d97706',
     '#7c3aed','#0891b2','#db2777','#65a30d'
@@ -440,7 +450,7 @@ function renderProjects() {
                 </select>
             </div>
             <select class="tag-select" onchange="projects[${i}].tag=this.value">
-                ${TAGS.map(t=>`<option value="${t}"${p.tag===t?' selected':''}>${t}</option>`).join('')}
+                ${tagsFor(p.name).map(t=>`<option value="${t}"${p.tag===t?' selected':''}>${t}</option>`).join('')}
             </select>
             <div class="pct-row">
                 <span class="pct-label">%</span>
@@ -457,8 +467,8 @@ function renderProjects() {
 function onProjectChange(i, name) {
     projects[i].name = name;
     const clients = clientsFor(name);
-    // Auto-assign client if only one option
     projects[i].client = clients.length === 1 ? clients[0] : '';
+    projects[i].tag = tagsFor(name)[0];
     renderProjects();
 }
 
