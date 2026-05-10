@@ -171,7 +171,6 @@
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             padding: 0.85rem;
-            margin-bottom: 0.5rem;
             transition: border-color .15s;
         }
         .project-card:hover { border-color: var(--border-hover); }
@@ -408,7 +407,7 @@
                     <button id="modeWeighted" class="mode-btn active" onclick="setMode('weighted')">Ponderada</button>
                     <button id="modePercent"  class="mode-btn"        onclick="setMode('percent')">Porcentual</button>
                 </div>
-                <div id="projectList" style="max-height:340px;overflow-y:auto;padding-right:2px"></div>
+                <div id="projectList" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;max-height:380px;overflow-y:auto;padding-right:2px"></div>
                 <button class="btn btn-outline btn-sm btn-full" onclick="addProject()" style="margin-top:0.3rem">
                     <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/></svg>
                     Agregar proyecto
