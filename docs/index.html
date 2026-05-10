@@ -268,50 +268,10 @@ const COLORS = [
     '#7c3aed','#0891b2','#db2777','#65a30d'
 ];
 
-// Proyecto → clientes válidos (del Excel exportado de Clockify)
-const PROJECTS_DATA = [
-    { project: "ALMA SADI",                  client: "DNN" },
-    { project: "Asistencia General a DNN",   client: "DNN" },
-    { project: "Asistencia General a O&M",   client: "O&M" },
-    { project: "BESS AMBA",                  client: "DNN" },
-    { project: "CTBRA",                      client: "O&M" },
-    { project: "Hidroelectricas COMAHUE",    client: "DNN" },
-    { project: "HORAS INDIRECTAS",           client: "DPI" },
-    { project: "PAMAS",                      client: "DPI" },
-    { project: "PATOC",                      client: "DPI" },
-    { project: "PATOC",                      client: "DNN" },
-    { project: "PEDAN",                      client: "DNN" },
-    { project: "PEHUC",                      client: "DNN" },
-    { project: "PEHUC",                      client: "DPI" },
-    { project: "PELEL",                      client: "O&M" },
-    { project: "PELSA",                      client: "DNN" },
-    { project: "PELSA",                      client: "DPI" },
-    { project: "PEPOM",                      client: "DNN" },
-    { project: "PETRE",                      client: "DPI" },
-    { project: "PEVI3",                      client: "DPI" },
-    { project: "PEVI3",                      client: "DNN" },
-    { project: "PEVLP",                      client: "DNN" },
-    { project: "PSANC",                      client: "DPI" },
-    { project: "PSBRA",                      client: "DNN" },
-    { project: "PSJUN",                      client: "DPI" },
-    { project: "PSLIN",                      client: "DPI" },
-    { project: "PSLMO",                      client: "DPI" },
-    { project: "PSLMO",                      client: "O&M" },
-    { project: "PSMZS",                      client: "DNN" },
-    { project: "PSSDV",                      client: "DNN" },
-    { project: "PSSDV",                      client: "DPI" },
-    { project: "PSSJS",                      client: "DPI" },
-    { project: "PSSMA",                      client: "DNN" },
-    { project: "PSSRA 150",                  client: "DPI" },
-    { project: "PSSRA 30",                   client: "DPI" },
-    { project: "PSSUL",                      client: "O&M" },
-    { project: "PSTOC",                      client: "O&M" },
-];
+// Cargado dinámicamente desde docs/projects.json
+let PROJECTS_DATA = [];
+let PROJECT_NAMES = [];
 
-// Lista única de proyectos (para el primer dropdown)
-const PROJECT_NAMES = [...new Set(PROJECTS_DATA.map(r => r.project))].sort();
-
-// Dado un proyecto, devuelve sus clientes válidos
 function clientsFor(projectName) {
     return PROJECTS_DATA.filter(r => r.project === projectName).map(r => r.client);
 }
@@ -323,12 +283,21 @@ let calYear, calMonth;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
-window.onload = () => {
+window.onload = async () => {
     loadConfig();
     const now = new Date();
     calYear = now.getFullYear();
     calMonth = now.getMonth();
     renderCalendar();
+    try {
+        const res = await fetch('./projects.json');
+        if (res.ok) {
+            PROJECTS_DATA = await res.json();
+            PROJECT_NAMES = [...new Set(PROJECTS_DATA.map(r => r.project))].sort();
+        }
+    } catch (e) {
+        console.warn('No se pudo cargar projects.json', e);
+    }
     addProject();
     addProject();
 };
