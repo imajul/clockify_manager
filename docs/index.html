@@ -423,10 +423,15 @@ function renderProjects() {
             </select>
             <div class="pct-row">
                 <span class="pct-label">%</span>
-                <input type="range" class="pct-slider" min="0" max="100" value="${p.pct}" id="sl-${i}"
+                ${i === projects.length - 1
+                    ? `<input type="range" class="pct-slider" min="0" max="100" value="${p.pct}" id="sl-${i}" disabled style="opacity:0.35"/>
+                <input type="number" class="pct-number" min="0" max="100" value="${p.pct}" id="pn-${i}" disabled style="background:#f1f5f9;color:#64748b"/>
+                <span style="font-size:0.7rem;color:#94a3b8;white-space:nowrap">auto</span>`
+                    : `<input type="range" class="pct-slider" min="0" max="100" value="${p.pct}" id="sl-${i}"
                     oninput="projects[${i}].pct=+this.value;document.getElementById('pn-${i}').value=this.value;updateTotal()"/>
                 <input type="number" class="pct-number" min="0" max="100" value="${p.pct}" id="pn-${i}"
-                    oninput="projects[${i}].pct=+this.value;document.getElementById('sl-${i}').value=this.value;updateTotal()"/>
+                    oninput="projects[${i}].pct=+this.value;document.getElementById('sl-${i}').value=this.value;updateTotal()"/>`
+                }
             </div>`;
         c.appendChild(div);
     });
@@ -442,8 +447,19 @@ function onProjectChange(i, name) {
 }
 
 function updateTotal() {
-    const total = projects.reduce((s,p) => s + (+p.pct||0), 0);
+    const n = projects.length;
     const el = document.getElementById('totalPct');
+    if (n === 0) { el.textContent = '0%'; el.className = 'total-err'; return; }
+
+    const sumOthers = projects.slice(0, n - 1).reduce((s, p) => s + (+p.pct || 0), 0);
+    const lastPct = Math.max(0, Math.min(100, 100 - sumOthers));
+    projects[n - 1].pct = lastPct;
+    const slEl = document.getElementById(`sl-${n - 1}`);
+    const pnEl = document.getElementById(`pn-${n - 1}`);
+    if (slEl) slEl.value = lastPct;
+    if (pnEl) pnEl.value = lastPct;
+
+    const total = sumOthers + lastPct;
     el.textContent = total + '%';
     el.className = total === 100 ? 'total-ok' : 'total-err';
 }
