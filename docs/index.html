@@ -145,6 +145,14 @@
         .cal-summary { font-size: 0.75rem; color: var(--text-2); margin-top: 0.55rem; min-height: 1.1rem; }
         .cal-actions { display: flex; gap: 0.5rem; margin-top: 0.55rem; }
 
+        /* ── Holidays ── */
+        .holidays-section { margin-top: 0.75rem; }
+        .holidays-title { font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); margin-bottom: 0.4rem; }
+        .holiday-item { display: flex; align-items: baseline; gap: 0.5rem; font-size: 0.73rem; padding: 0.22rem 0; border-bottom: 1px solid var(--border); color: var(--text-2); }
+        .holiday-item:last-child { border-bottom: none; }
+        .holiday-date { font-weight: 700; color: var(--danger); flex-shrink: 0; min-width: 52px; }
+        .holiday-name { color: var(--text-2); }
+
         /* ── Mode toggle ── */
         .mode-toggle {
             display: flex;
@@ -396,6 +404,7 @@
                     <button class="btn btn-outline btn-sm" style="flex:1" onclick="clearSelection()">Limpiar selección</button>
                     <button class="btn btn-outline btn-sm" style="flex:1" onclick="selectFullMonth()">Mes completo</button>
                 </div>
+                <div id="calHolidays"></div>
             </div>
         </div>
 
@@ -523,6 +532,24 @@ function tagsFor(projectName) {
     return projectName === 'HORAS INDIRECTAS' ? TAGS_INDIRECTAS : TAGS;
 }
 
+const FERIADOS = [
+    { date: "2026-01-01", name: "Año Nuevo" },
+    { date: "2026-02-16", name: "Carnaval" },
+    { date: "2026-02-17", name: "Carnaval" },
+    { date: "2026-03-24", name: "Día de la Memoria por la Verdad y la Justicia" },
+    { date: "2026-04-02", name: "Día del Veterano y de los Caídos en Malvinas" },
+    { date: "2026-04-03", name: "Viernes Santo" },
+    { date: "2026-05-01", name: "Día del Trabajador" },
+    { date: "2026-05-25", name: "Día de la Revolución de Mayo" },
+    { date: "2026-06-15", name: "Paso a la Inmortalidad del Gral. Güemes" },
+    { date: "2026-06-20", name: "Paso a la Inmortalidad del Gral. Belgrano" },
+    { date: "2026-07-09", name: "Día de la Independencia" },
+    { date: "2026-08-17", name: "Paso a la Inmortalidad del Gral. San Martín" },
+    { date: "2026-11-23", name: "Día de la Soberanía Nacional" },
+    { date: "2026-12-08", name: "Inmaculada Concepción de María" },
+    { date: "2026-12-25", name: "Navidad" },
+];
+
 const COLORS = [
     '#03a9f4','#2e7d32','#e53935','#f59e0b',
     '#7c3aed','#00838f','#d81b60','#558b2f'
@@ -616,6 +643,23 @@ function renderCalendar() {
     }
 
     updateCalSummary();
+    renderHolidays();
+}
+
+function renderHolidays() {
+    const prefix = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
+    const monthHolidays = FERIADOS.filter(f => f.date.startsWith(prefix));
+    const el = document.getElementById('calHolidays');
+    if (!monthHolidays.length) { el.innerHTML = ''; return; }
+    const DAY_ABBR = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    el.innerHTML = `<div class="holidays-section">
+        <div class="holidays-title">Feriados del mes</div>
+        ${monthHolidays.map(f => {
+            const d = new Date(f.date + 'T12:00:00');
+            const label = `${DAY_ABBR[d.getDay()]} ${d.getDate()}`;
+            return `<div class="holiday-item"><span class="holiday-date">${label}</span><span class="holiday-name">${f.name}</span></div>`;
+        }).join('')}
+    </div>`;
 }
 
 function toggleDate(dateStr) {
@@ -907,13 +951,15 @@ function renderGrid(blocks) {
     const summary = document.getElementById('hoursSummary');
     summary.innerHTML = '';
 
+    const totalH = blocks.reduce((s,b) => s + slotHours(b.start, b.end), 0);
     projects.forEach((p,i) => {
         if (!p.name) return;
         const color = COLORS[i % COLORS.length];
         const hrs = blocks.filter(b=>b.pidx===i).reduce((s,b)=>s+slotHours(b.start,b.end),0);
         if (!hrs) return;
+        const pct = totalH ? Math.round(hrs / totalH * 100) : 0;
         legend.innerHTML += `<div class="legend-item"><span class="legend-dot" style="background:${color}"></span>${p.name}${p.client?' · '+p.client:''}</div>`;
-        summary.innerHTML += `<div class="hours-chip">${p.name}<strong>${hrs}h</strong></div>`;
+        summary.innerHTML += `<div class="hours-chip">${p.name}<strong>${hrs}h</strong><span style="color:var(--text-3);font-size:0.72rem">${pct}%</span></div>`;
     });
 }
 
