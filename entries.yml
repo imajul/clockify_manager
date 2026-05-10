@@ -1,18 +1,49 @@
 timezone: "America/Argentina/Buenos_Aires"
 entries:
-  - date: "2026-05-15"
+  - date: "2026-05-08"
     start: "09:00"
-    end: "13:00"
-    project: "PSSRA 30"
+    end: "10:00"
+    project: "HORAS INDIRECTAS"
     client: "DPI"
     tags:
-      - "Ejecución de Ingenieria"
+      - "Licencia / Vacaciones"
     billable: true
-  - date: "2026-05-15"
+  - date: "2026-05-08"
+    start: "10:00"
+    end: "11:00"
+    project: "PELEL"
+    client: "O&M"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-08"
+    start: "11:00"
+    end: "13:00"
+    project: "PEDAN"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-08"
     start: "14:00"
-    end: "18:00"
-    project: "PSSRA 30"
+    end: "15:00"
+    project: "PELSA"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-08"
+    start: "15:00"
+    end: "17:00"
+    project: "PAMAS"
     client: "DPI"
     tags:
-      - "Ejecución de Ingenieria"
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-08"
+    start: "17:00"
+    end: "18:00"
+    project: "PEPOM"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
     billable: true
