@@ -3,16 +3,16 @@ entries:
   - date: "2026-05-08"
     start: "09:00"
     end: "13:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
+    project: "HORAS INDIRECTAS"
+    client: "DPI"
     tags:
-      - "Gestion de Ingenieria"
+      - "Licencia / Vacaciones"
     billable: true
   - date: "2026-05-08"
     start: "14:00"
     end: "18:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
+    project: "HORAS INDIRECTAS"
+    client: "DPI"
     tags:
-      - "Gestion de Ingenieria"
+      - "Licencia / Vacaciones"
     billable: true
