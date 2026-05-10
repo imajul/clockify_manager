@@ -136,6 +136,10 @@
             </div>
             <div class="cal-grid" id="calGrid"></div>
             <div class="cal-summary" id="calSummary">Hacé click en los días que trabajaste.</div>
+            <div style="display:flex;gap:0.5rem;margin-top:0.65rem">
+                <button class="btn btn-outline btn-sm" style="flex:1" onclick="clearSelection()">Limpiar selección</button>
+                <button class="btn btn-outline btn-sm" style="flex:1" onclick="selectFullMonth()">Mes completo</button>
+            </div>
 
             <div class="divider"></div>
 
@@ -361,6 +365,23 @@ function toggleDate(dateStr) {
     const idx = selectedDates.indexOf(dateStr);
     if (idx >= 0) selectedDates.splice(idx, 1);
     else selectedDates.push(dateStr);
+    selectedDates.sort();
+    renderCalendar();
+}
+
+function clearSelection() {
+    selectedDates = [];
+    renderCalendar();
+}
+
+function selectFullMonth() {
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dow = new Date(calYear, calMonth, d).getDay();
+        if (dow === 0 || dow === 6) continue;
+        const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        if (!selectedDates.includes(dateStr)) selectedDates.push(dateStr);
+    }
     selectedDates.sort();
     renderCalendar();
 }
