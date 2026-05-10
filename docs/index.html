@@ -105,6 +105,17 @@
         .cal-summary { font-size: 0.75rem; color: #64748b; margin-top: 0.6rem; min-height: 1.2rem; }
         .no-dist { color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 3rem 1rem; }
 
+        .mode-toggle { display: flex; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 0.65rem; }
+        .mode-btn { flex: 1; padding: 0.38rem 0.5rem; font-size: 0.78rem; font-weight: 600; border: none; cursor: pointer; background: white; color: #64748b; transition: background .12s; }
+        .mode-btn.active { background: #2563eb; color: white; }
+        .mode-btn:not(.active):hover { background: #f1f5f9; }
+
+        .weight-row { display: flex; align-items: center; gap: 0.35rem; margin-top: 0.45rem; }
+        .weight-btn { width: 30px; height: 30px; border-radius: 6px; border: 1.5px solid #e2e8f0; background: white; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: #64748b; transition: all .1s; }
+        .weight-btn.w-active { background: #2563eb; border-color: #2563eb; color: white; }
+        .weight-btn:not(.w-active):hover { border-color: #93c5fd; color: #2563eb; }
+        .weight-pct-label { font-size: 0.75rem; color: #94a3b8; margin-left: auto; white-space: nowrap; }
+
         /* Conflict modal */
         .modal-wide { width: 520px; }
         .conflict-list { margin: 0.75rem 0; max-height: 260px; overflow-y: auto; }
@@ -144,6 +155,10 @@
             <div class="divider"></div>
 
             <div class="section-label">Proyectos</div>
+            <div class="mode-toggle">
+                <button id="modeWeighted" class="mode-btn active" onclick="setMode('weighted')">Ponderada</button>
+                <button id="modePercent"  class="mode-btn"        onclick="setMode('percent')">Porcentual</button>
+            </div>
             <div id="projectList"></div>
             <button class="btn btn-outline btn-sm" onclick="addProject()" style="width:100%;margin-top:0.1rem">
                 + Agregar proyecto
@@ -284,6 +299,7 @@ let projects = [];
 let currentBlocks = [];
 let selectedDates = [];   // 'YYYY-MM-DD' strings, sorted
 let calYear, calMonth;
+let mode = 'weighted';   // 'weighted' | 'percent'
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
@@ -401,8 +417,29 @@ function fmtDate(d) { return d.toISOString().split('T')[0]; }
 
 // ── Projects ──────────────────────────────────────────────────────────────────
 
+function setMode(m) {
+    mode = m;
+    document.getElementById('modeWeighted').classList.toggle('active', m === 'weighted');
+    document.getElementById('modePercent').classList.toggle('active', m === 'percent');
+    renderProjects();
+}
+
+function computeWeightedPcts() {
+    const weights = projects.map(p => p.weight || 1);
+    const total = weights.reduce((s, w) => s + w, 0);
+    if (total === 0) return projects.map(() => 0);
+    const exact = weights.map(w => w / total * 100);
+    const floored = exact.map(Math.floor);
+    const diffs = exact.map((e, i) => e - floored[i]);
+    let rem = 100 - floored.reduce((s, v) => s + v, 0);
+    diffs.map((d, i) => [d, i]).sort((a, b) => b[0] - a[0]).forEach(([, i]) => {
+        if (rem-- > 0) floored[i]++;
+    });
+    return floored;
+}
+
 function addProject() {
-    projects.push({ name: '', client: '', tag: TAGS[0], pct: 0 });
+    projects.push({ name: '', client: '', tag: TAGS[0], pct: 0, weight: 3 });
     renderProjects();
 }
 
@@ -413,6 +450,10 @@ function removeProject(i) {
 }
 
 function renderProjects() {
+    if (mode === 'weighted') {
+        const pcts = computeWeightedPcts();
+        projects.forEach((p, i) => p.pct = pcts[i]);
+    }
     const c = document.getElementById('projectList');
     c.innerHTML = '';
     projects.forEach((p, i) => {
@@ -442,7 +483,15 @@ function renderProjects() {
             <select class="tag-select" onchange="projects[${i}].tag=this.value">
                 ${tagsFor(p.name).map(t=>`<option value="${t}"${p.tag===t?' selected':''}>${t}</option>`).join('')}
             </select>
-            <div class="pct-row">
+            ${mode === 'weighted'
+                ? (() => {
+                    const pcts = computeWeightedPcts();
+                    return `<div class="weight-row">
+                ${[1,2,3,4,5].map(w=>`<button class="weight-btn${p.weight===w?' w-active':''}" onclick="projects[${i}].weight=${w};renderProjects()">${w}</button>`).join('')}
+                <span class="weight-pct-label">${pcts[i]}%</span>
+            </div>`;
+                })()
+                : `<div class="pct-row">
                 <span class="pct-label">%</span>
                 ${i === projects.length - 1
                     ? `<input type="range" class="pct-slider" min="0" max="100" value="${p.pct}" id="sl-${i}" disabled style="opacity:0.35"/>
@@ -453,7 +502,8 @@ function renderProjects() {
                 <input type="number" class="pct-number" min="0" max="100" value="${p.pct}" id="pn-${i}"
                     oninput="projects[${i}].pct=+this.value;document.getElementById('sl-${i}').value=this.value;updateTotal()"/>`
                 }
-            </div>`;
+            </div>`
+            }`;
         c.appendChild(div);
     });
     updateTotal();
@@ -471,6 +521,14 @@ function updateTotal() {
     const n = projects.length;
     const el = document.getElementById('totalPct');
     if (n === 0) { el.textContent = '0%'; el.className = 'total-err'; return; }
+
+    if (mode === 'weighted') {
+        const pcts = computeWeightedPcts();
+        projects.forEach((p, i) => p.pct = pcts[i]);
+        el.textContent = '100%';
+        el.className = 'total-ok';
+        return;
+    }
 
     const sumOthers = projects.slice(0, n - 1).reduce((s, p) => s + (+p.pct || 0), 0);
     const lastPct = Math.max(0, Math.min(100, 100 - sumOthers));
