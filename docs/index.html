@@ -223,9 +223,9 @@
         /* ── Weight row ── */
         .weight-row { display: flex; align-items: center; gap: 0.3rem; }
         .weight-btn {
-            width: 28px; height: 28px;
+            width: 24px; height: 24px;
             border-radius: var(--radius); border: 1.5px solid var(--border);
-            background: var(--card); font-size: 0.78rem; font-weight: 700;
+            background: var(--card); font-size: 0.72rem; font-weight: 700;
             cursor: pointer; color: var(--text-2); transition: all .1s;
             font-family: inherit;
         }
@@ -724,7 +724,7 @@ function computeWeightedPcts() {
 }
 
 function addProject() {
-    projects.push({ name: '', client: '', tag: TAGS[0], pct: 0, weight: 3 });
+    projects.push({ name: '', client: '', tag: TAGS[0], pct: 0, weight: 5 });
     renderProjects();
 }
 
@@ -773,7 +773,7 @@ function renderProjects() {
                 ? (() => {
                     const pcts = computeWeightedPcts();
                     return `<div class="weight-row">
-                ${[1,2,3,4,5].map(w=>`<button class="weight-btn${p.weight===w?' w-active':''}" onclick="projects[${i}].weight=${w};renderProjects()">${w}</button>`).join('')}
+                ${[1,2,3,4,5,6,7,8,9,10].map(w=>`<button class="weight-btn${p.weight===w?' w-active':''}" onclick="projects[${i}].weight=${w};renderProjects()">${w}</button>`).join('')}
                 <span class="weight-pct-label">${pcts[i]}%</span>
             </div>`;
                 })()
