@@ -1,5 +1,21 @@
 timezone: "America/Argentina/Buenos_Aires"
 entries:
+  - date: "2026-05-01"
+    start: "09:00"
+    end: "13:00"
+    project: "ALMA SADI"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-01"
+    start: "14:00"
+    end: "18:00"
+    project: "ALMA SADI"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
   - date: "2026-05-04"
     start: "09:00"
     end: "13:00"
@@ -26,29 +42,21 @@ entries:
     billable: true
   - date: "2026-05-05"
     start: "14:00"
-    end: "18:00"
+    end: "15:00"
     project: "ALMA SADI"
     client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-05"
+    start: "15:00"
+    end: "18:00"
+    project: "PAMAS"
+    client: "DPI"
     tags:
       - "Gestion de Ingenieria"
     billable: true
   - date: "2026-05-06"
-    start: "09:00"
-    end: "13:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-05-06"
-    start: "14:00"
-    end: "18:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-05-07"
     start: "09:00"
     end: "13:00"
     project: "PAMAS"
@@ -56,42 +64,81 @@ entries:
     tags:
       - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-05-07"
+  - date: "2026-05-06"
     start: "14:00"
-    end: "18:00"
+    end: "15:00"
     project: "PAMAS"
     client: "DPI"
     tags:
       - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-05-08"
+  - date: "2026-05-06"
+    start: "15:00"
+    end: "18:00"
+    project: "PSSRA 30"
+    client: "DPI"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-07"
     start: "09:00"
     end: "13:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-05-08"
-    start: "14:00"
-    end: "18:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-05-11"
-    start: "09:00"
-    end: "13:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-05-11"
-    start: "14:00"
-    end: "18:00"
     project: "PSSDV"
+    client: "DNN"
     tags:
       - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-07"
+    start: "14:00"
+    end: "15:00"
+    project: "PSSDV"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-07"
+    start: "15:00"
+    end: "18:00"
+    project: "Asistencia General a DNN"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-08"
+    start: "09:00"
+    end: "13:00"
+    project: "Asistencia General a DNN"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-08"
+    start: "14:00"
+    end: "18:00"
+    project: "Asistencia General a DNN"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-11"
+    start: "09:00"
+    end: "12:00"
+    project: "PATOC"
+    client: "DPI"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-11"
+    start: "12:00"
+    end: "13:00"
+    project: "HORAS INDIRECTAS"
+    client: "DPI"
+    task: "Procesos / Otros"
+    billable: true
+  - date: "2026-05-11"
+    start: "14:00"
+    end: "18:00"
+    project: "HORAS INDIRECTAS"
+    client: "DPI"
+    task: "Procesos / Otros"
     billable: true
