@@ -366,6 +366,34 @@
 
         /* ── Divider ── */
         .divider { height: 1px; background: var(--border); margin: 0.9rem 0; }
+
+        /* ── Overtime ── */
+        .overtime-section-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            color: var(--warn);
+            margin-bottom: 0.65rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .entry-card.ot-block {
+            background-image: repeating-linear-gradient(
+                45deg,
+                rgba(255,255,255,0.14) 0px,
+                rgba(255,255,255,0.14) 4px,
+                transparent 4px,
+                transparent 10px
+            );
+        }
+        .ot-badge {
+            font-size: 0.58rem; font-weight: 700;
+            background: rgba(255,255,255,0.25);
+            border-radius: 3px; padding: 0 3px;
+            margin-left: 3px; vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -425,6 +453,18 @@
                     <span class="total-label">Total asignado</span>
                     <span id="totalPct" class="total-err">0%</span>
                 </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="card-section">
+                <div class="overtime-section-label">
+                    <span>⚡</span> Horas Extra
+                    <span style="font-size:0.65rem;font-weight:400;color:var(--text-3);margin-left:0.2rem">· luego de las 18:00</span>
+                </div>
+                <div id="overtimeList" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem"></div>
+                <button class="btn btn-outline btn-sm btn-full" onclick="addOvertime()" style="border-style:dashed;color:var(--warn);border-color:#f59e0b">
+                    <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+                    Agregar horas extra
+                </button>
             </div>
             <div class="card-divider"></div>
             <div class="card-section" style="padding-bottom:1.1rem">
@@ -565,9 +605,19 @@ function clientsFor(projectName) {
 
 let projects = [];
 let currentBlocks = [];
+let currentOvertimeBlocks = [];
+let overtimeEntries = []; // [{name, client, tag, hours}]
 let selectedDates = [];   // 'YYYY-MM-DD' strings, sorted
 let calYear, calMonth;
 let mode = 'weighted';   // 'weighted' | 'percent'
+
+// 4 overtime slots per day (18:00-22:00)
+const OVERTIME_SLOTS = [
+    {start:'18:00',end:'19:00'},
+    {start:'19:00',end:'20:00'},
+    {start:'20:00',end:'21:00'},
+    {start:'21:00',end:'22:00'},
+];
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
@@ -829,6 +879,106 @@ function updateTotal() {
     el.className = total === 100 ? 'total-ok' : 'total-err';
 }
 
+// ── Overtime ──────────────────────────────────────────────────────────────────
+
+function addOvertime() {
+    overtimeEntries.push({ name: '', client: '', tag: TAGS[0], hours: 4 });
+    renderOvertime();
+}
+
+function removeOvertime(i) {
+    overtimeEntries.splice(i, 1);
+    renderOvertime();
+}
+
+function onOvertimeProjectChange(i, name) {
+    overtimeEntries[i].name = name;
+    const clients = clientsFor(name);
+    overtimeEntries[i].client = clients.length === 1 ? clients[0] : '';
+    overtimeEntries[i].tag = tagsFor(name)[0];
+    renderOvertime();
+}
+
+function renderOvertime() {
+    const c = document.getElementById('overtimeList');
+    c.innerHTML = '';
+    overtimeEntries.forEach((oe, i) => {
+        const colorIdx = projects.length + i;
+        const color = COLORS[colorIdx % COLORS.length];
+        const clients = oe.name ? clientsFor(oe.name) : [];
+        const maxHrs = selectedDates.length * 4 || 40;
+        const div = document.createElement('div');
+        div.className = 'project-card';
+        div.style.borderLeft = `3px solid ${color}`;
+        div.innerHTML = `
+            <div class="project-card-header">
+                <div class="project-card-title">
+                    <span class="project-dot" style="background:${color}"></span>
+                    ⚡ Extra ${i+1}
+                </div>
+                <button class="btn btn-ghost" onclick="removeOvertime(${i})">✕</button>
+            </div>
+            <div class="project-fields">
+                <select class="field-select" onchange="onOvertimeProjectChange(${i}, this.value)">
+                    <option value="">— Proyecto —</option>
+                    ${PROJECT_NAMES.map(n=>`<option value="${n}"${oe.name===n?' selected':''}>${n}</option>`).join('')}
+                </select>
+                <select class="field-select" onchange="overtimeEntries[${i}].client=this.value" ${!clients.length?'disabled':''}>
+                    ${clients.length
+                        ? clients.map(cl=>`<option value="${cl}"${oe.client===cl?' selected':''}>${cl}</option>`).join('')
+                        : '<option value="">— Cliente —</option>'}
+                </select>
+            </div>
+            <select class="field-select tag-select" onchange="overtimeEntries[${i}].tag=this.value">
+                ${tagsFor(oe.name).map(t=>`<option value="${t}"${oe.tag===t?' selected':''}>${t}</option>`).join('')}
+            </select>
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.45rem">
+                <span style="font-size:0.7rem;color:var(--text-3);font-weight:600;white-space:nowrap">Hs extra:</span>
+                <input type="number" class="pct-number" style="width:58px" min="1" max="${maxHrs}" value="${oe.hours}"
+                    oninput="overtimeEntries[${i}].hours=Math.max(1,+this.value)">
+                <span style="font-size:0.72rem;color:var(--text-3)">en total</span>
+            </div>`;
+        c.appendChild(div);
+    });
+}
+
+function distributeOvertime() {
+    currentOvertimeBlocks = [];
+    if (!selectedDates.length || !overtimeEntries.length) return;
+
+    const pool = [];
+    for (const date of selectedDates) {
+        const d = new Date(date + 'T12:00:00');
+        const label = `${'Dom Lun Mar Mié Jue Vie Sáb'.split(' ')[d.getDay()]} ${d.getDate()}`;
+        for (const slot of OVERTIME_SLOTS) {
+            pool.push({ date, label, ...slot, oidx: null });
+        }
+    }
+
+    let si = 0;
+    for (let oi = 0; oi < overtimeEntries.length; oi++) {
+        const hours = Math.max(0, Math.round(overtimeEntries[oi].hours || 0));
+        for (let h = 0; h < hours; h++) {
+            if (si >= pool.length) break;
+            pool[si++].oidx = oi;
+        }
+    }
+
+    const assigned = pool.filter(s => s.oidx !== null);
+    const merged = [];
+    let cur = null;
+    for (const s of assigned) {
+        if (cur && cur.oidx === s.oidx && cur.date === s.date && cur.end === s.start) {
+            cur.end = s.end;
+        } else {
+            if (cur) merged.push(cur);
+            cur = { ...s };
+        }
+    }
+    if (cur) merged.push(cur);
+    currentOvertimeBlocks = merged;
+}
+
 // ── Distribution ──────────────────────────────────────────────────────────────
 
 // 8 one-hour slots per day (09-13 AM, 14-18 PM)
@@ -893,38 +1043,44 @@ function distribute() {
 
     const merged = mergeSlots(rawSlots.filter(s => s.pidx !== null));
     currentBlocks = merged;
-    renderGrid(merged);
+    distributeOvertime();
+    renderGrid(merged, currentOvertimeBlocks);
     document.getElementById('loadBtn').disabled = false;
     const totalH = merged.reduce((s,b) => s + slotHours(b.start, b.end), 0);
-    document.getElementById('actionsHint').textContent =
-        `${totalH}h distribuidas en ${selectedDates.length} día${selectedDates.length>1?'s':''} · ${merged.length} entradas.`;
+    const totalOtH = currentOvertimeBlocks.reduce((s,b) => s + slotHours(b.start, b.end), 0);
+    const totalEntries = merged.length + currentOvertimeBlocks.length;
+    let hint = `${totalH}h distribuidas en ${selectedDates.length} día${selectedDates.length>1?'s':''} · ${totalEntries} entradas`;
+    if (totalOtH) hint += ` · ⚡ ${totalOtH}h extra`;
+    document.getElementById('actionsHint').textContent = hint + '.';
     showToast('Distribución generada.', 'success');
 }
 
 // ── Grid rendering ────────────────────────────────────────────────────────────
 
-function renderGrid(blocks) {
+function renderGrid(blocks, overtimeBlocks = []) {
     const grid = document.getElementById('dayGrid');
     grid.innerHTML = '';
 
-    const uniqueDates = [...new Set(blocks.map(b=>b.date))];
+    const allDates = [...new Set([...blocks.map(b=>b.date), ...overtimeBlocks.map(b=>b.date)])].sort();
 
-    if (!uniqueDates.length) {
+    if (!allDates.length) {
         grid.innerHTML = '<div class="no-dist">Generá la distribución para ver las entradas.</div>';
         return;
     }
 
-    uniqueDates.forEach(date => {
+    allDates.forEach(date => {
         const col = document.createElement('div');
         col.className = 'day-col';
 
         const header = document.createElement('div');
         header.className = 'day-header';
-        header.textContent = blocks.find(b=>b.date===date)?.label || '';
+        header.textContent = (blocks.find(b=>b.date===date) || overtimeBlocks.find(b=>b.date===date))?.label || '';
         col.appendChild(header);
 
         const dayBlocks = blocks.filter(b=>b.date===date);
-        if (!dayBlocks.length) {
+        const dayOtBlocks = overtimeBlocks.filter(b=>b.date===date);
+
+        if (!dayBlocks.length && !dayOtBlocks.length) {
             const empty = document.createElement('div');
             empty.className = 'entry-empty';
             empty.textContent = '—';
@@ -941,6 +1097,18 @@ function renderGrid(blocks) {
                 card.innerHTML = `<span class="entry-time">${b.start}–${b.end} (${hrs}h)</span><strong>${p.name}</strong>`;
                 col.appendChild(card);
             });
+            dayOtBlocks.forEach(b => {
+                const oe = overtimeEntries[b.oidx];
+                const colorIdx = projects.length + b.oidx;
+                const color = COLORS[colorIdx % COLORS.length];
+                const hrs = slotHours(b.start, b.end);
+                const card = document.createElement('div');
+                card.className = 'entry-card ot-block';
+                card.style.background = color;
+                card.style.minHeight = `${hrs * 22}px`;
+                card.innerHTML = `<span class="entry-time">${b.start}–${b.end} (${hrs}h)</span><strong>${oe.name}<span class="ot-badge">⚡</span></strong>`;
+                col.appendChild(card);
+            });
         }
 
         grid.appendChild(col);
@@ -951,15 +1119,25 @@ function renderGrid(blocks) {
     const summary = document.getElementById('hoursSummary');
     summary.innerHTML = '';
 
-    const totalH = blocks.reduce((s,b) => s + slotHours(b.start, b.end), 0);
+    const regularTotalH = blocks.reduce((s,b) => s + slotHours(b.start, b.end), 0);
     projects.forEach((p,i) => {
         if (!p.name) return;
         const color = COLORS[i % COLORS.length];
         const hrs = blocks.filter(b=>b.pidx===i).reduce((s,b)=>s+slotHours(b.start,b.end),0);
         if (!hrs) return;
-        const pct = totalH ? Math.round(hrs / totalH * 100) : 0;
+        const pct = regularTotalH ? Math.round(hrs / regularTotalH * 100) : 0;
         legend.innerHTML += `<div class="legend-item"><span class="legend-dot" style="background:${color}"></span>${p.name}${p.client?' · '+p.client:''}</div>`;
         summary.innerHTML += `<div class="hours-chip">${p.name}<strong>${hrs}h</strong><span style="color:var(--text-3);font-size:0.72rem">${pct}%</span></div>`;
+    });
+
+    overtimeEntries.forEach((oe, i) => {
+        if (!oe.name) return;
+        const colorIdx = projects.length + i;
+        const color = COLORS[colorIdx % COLORS.length];
+        const hrs = overtimeBlocks.filter(b=>b.oidx===i).reduce((s,b)=>s+slotHours(b.start,b.end),0);
+        if (!hrs) return;
+        legend.innerHTML += `<div class="legend-item"><span class="legend-dot" style="background:${color};background-image:repeating-linear-gradient(45deg,rgba(255,255,255,0.3) 0px,rgba(255,255,255,0.3) 2px,transparent 2px,transparent 6px)"></span>⚡ ${oe.name}${oe.client?' · '+oe.client:''}</div>`;
+        summary.innerHTML += `<div class="hours-chip">⚡ ${oe.name}<strong>${hrs}h extra</strong></div>`;
     });
 }
 
@@ -1044,18 +1222,32 @@ async function loadToClockify() {
     if (!token || !repo) return showToast('Configurá el token de GitHub y el repositorio primero.', 'error');
 
     const filled = currentBlocks.filter(b => b.pidx !== null);
-    if (!filled.length) return showToast('Generá la distribución primero.', 'error');
+    if (!filled.length && !currentOvertimeBlocks.length) return showToast('Generá la distribución primero.', 'error');
 
-    const entries = filled.map(b => ({ ...b, project: projects[b.pidx].name, client: projects[b.pidx].client, tag: projects[b.pidx].tag }));
+    const regularEntries = filled.map(b => ({
+        date: b.date, start: b.start, end: b.end,
+        project: projects[b.pidx].name,
+        client: projects[b.pidx].client,
+        tag: projects[b.pidx].tag,
+    }));
+
+    const otEntries = currentOvertimeBlocks.map(b => ({
+        date: b.date, start: b.start, end: b.end,
+        project: overtimeEntries[b.oidx].name,
+        client: overtimeEntries[b.oidx].client,
+        tag: overtimeEntries[b.oidx].tag,
+    }));
+
+    const allEntries = [...regularEntries, ...otEntries];
 
     document.getElementById('loadBtn').disabled = true;
 
     if (clockifyKey) {
         showToast('Verificando superposiciones...', 'info');
         try {
-            const { conflicts, workspaceId } = await detectConflicts(clockifyKey, clockifyWs, entries);
+            const { conflicts, workspaceId } = await detectConflicts(clockifyKey, clockifyWs, allEntries);
             if (conflicts.length > 0) {
-                _pendingLoad = { entries, conflicts, workspaceId };
+                _pendingLoad = { entries: allEntries, conflicts, workspaceId };
                 document.getElementById('loadBtn').disabled = false;
                 showConflictModal(conflicts);
                 return;
@@ -1067,7 +1259,7 @@ async function loadToClockify() {
         }
     }
 
-    await commitAndTrigger(entries, token, repo);
+    await commitAndTrigger(allEntries, token, repo);
     document.getElementById('loadBtn').disabled = false;
 }
 
@@ -1105,17 +1297,16 @@ async function commitAndTrigger(entries, token, repo) {
     const tz = 'America/Argentina/Buenos_Aires';
     const lines = [`timezone: "${tz}"`, 'entries:'];
     entries.forEach(e => {
-        const p = projects[e.pidx];
         lines.push(`  - date: "${e.date}"`);
         lines.push(`    start: "${e.start}"`);
         lines.push(`    end: "${e.end}"`);
-        lines.push(`    project: "${p.name}"`);
-        if (p.client) lines.push(`    client: "${p.client}"`);
-        if (p.name === 'HORAS INDIRECTAS') {
-            lines.push(`    task: "${p.tag}"`);
+        lines.push(`    project: "${e.project}"`);
+        if (e.client) lines.push(`    client: "${e.client}"`);
+        if (e.project === 'HORAS INDIRECTAS') {
+            lines.push(`    task: "${e.tag}"`);
         } else {
             lines.push(`    tags:`);
-            lines.push(`      - "${p.tag}"`);
+            lines.push(`      - "${e.tag}"`);
         }
         lines.push(`    billable: true`);
     });
@@ -1156,9 +1347,8 @@ function ghFetch(token, url, opts={}) {
 function showConflictModal(conflicts) {
     const list = document.getElementById('conflictList');
     list.innerHTML = conflicts.map(c => {
-        const p = projects[c.entry.pidx];
         return `<div class="conflict-item">
-            <div class="new">● ${c.entry.date} ${c.entry.start}-${c.entry.end} — ${p.name}</div>
+            <div class="new">● ${c.entry.date} ${c.entry.start}-${c.entry.end} — ${c.entry.project}</div>
             <div class="existing">↔ Conflicto con: "${c.existingDesc}" ${c.existingStart}-${c.existingEnd} UTC</div>
         </div>`;
     }).join('');
