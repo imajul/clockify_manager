@@ -934,9 +934,9 @@ function renderOvertime() {
             </select>
             <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.45rem">
                 <span style="font-size:0.7rem;color:var(--text-3);font-weight:600;white-space:nowrap">Hs extra:</span>
-                <input type="number" class="pct-number" style="width:58px" min="1" max="${maxHrs}" value="${oe.hours}"
-                    oninput="overtimeEntries[${i}].hours=Math.max(1,+this.value)">
-                <span style="font-size:0.72rem;color:var(--text-3)">en total</span>
+                <input type="number" class="pct-number" style="width:58px" min="1" max="4" value="${oe.hours}"
+                    oninput="overtimeEntries[${i}].hours=Math.min(4,Math.max(1,+this.value))">
+                <span style="font-size:0.72rem;color:var(--text-3)">por día</span>
             </div>`;
         c.appendChild(div);
     });
@@ -946,37 +946,28 @@ function distributeOvertime() {
     currentOvertimeBlocks = [];
     if (!selectedDates.length || !overtimeEntries.length) return;
 
-    const pool = [];
+    const result = [];
     for (const date of selectedDates) {
         const d = new Date(date + 'T12:00:00');
         const label = `${'Dom Lun Mar Mié Jue Vie Sáb'.split(' ')[d.getDay()]} ${d.getDate()}`;
-        for (const slot of OVERTIME_SLOTS) {
-            pool.push({ date, label, ...slot, oidx: null });
+        let slotIdx = 0;
+        for (let oi = 0; oi < overtimeEntries.length; oi++) {
+            const hours = Math.max(0, Math.round(overtimeEntries[oi].hours || 0));
+            let cur = null;
+            for (let h = 0; h < hours; h++) {
+                if (slotIdx >= OVERTIME_SLOTS.length) break;
+                const slot = OVERTIME_SLOTS[slotIdx++];
+                if (cur && cur.end === slot.start) {
+                    cur.end = slot.end;
+                } else {
+                    if (cur) result.push(cur);
+                    cur = { date, label, start: slot.start, end: slot.end, oidx: oi };
+                }
+            }
+            if (cur) result.push(cur);
         }
     }
-
-    let si = 0;
-    for (let oi = 0; oi < overtimeEntries.length; oi++) {
-        const hours = Math.max(0, Math.round(overtimeEntries[oi].hours || 0));
-        for (let h = 0; h < hours; h++) {
-            if (si >= pool.length) break;
-            pool[si++].oidx = oi;
-        }
-    }
-
-    const assigned = pool.filter(s => s.oidx !== null);
-    const merged = [];
-    let cur = null;
-    for (const s of assigned) {
-        if (cur && cur.oidx === s.oidx && cur.date === s.date && cur.end === s.start) {
-            cur.end = s.end;
-        } else {
-            if (cur) merged.push(cur);
-            cur = { ...s };
-        }
-    }
-    if (cur) merged.push(cur);
-    currentOvertimeBlocks = merged;
+    currentOvertimeBlocks = result;
 }
 
 // ── Distribution ──────────────────────────────────────────────────────────────
@@ -1009,39 +1000,43 @@ function mergeSlots(rawSlots) {
 function distribute() {
     if (!selectedDates.length) return showToast('Seleccioná al menos un día en el calendario.', 'error');
 
-    const total = projects.reduce((s,p) => s + (+p.pct||0), 0);
-    if (total !== 100) return showToast(`Los porcentajes suman ${total}%, deben sumar 100%.`, 'error');
-
     const valid = projects.filter(p => p.name.trim());
-    if (!valid.length) return showToast('Completá al menos un proyecto.', 'error');
+    const hasOt = overtimeEntries.some(oe => oe.name.trim());
+    if (!valid.length && !hasOt) return showToast('Completá al menos un proyecto u horas extra.', 'error');
 
-    const totalSlots = selectedDates.length * 8;
-    const rawSlots = [];
-    for (const date of selectedDates) {
-        const d = new Date(date + 'T12:00:00');
-        const label = `${'Dom Lun Mar Mié Jue Vie Sáb'.split(' ')[d.getDay()]} ${d.getDate()}`;
-        for (const slot of HOUR_SLOTS) {
-            rawSlots.push({ date, label, ...slot, pidx: null });
+    let merged = [];
+    if (valid.length) {
+        const total = projects.reduce((s,p) => s + (+p.pct||0), 0);
+        if (total !== 100) return showToast(`Los porcentajes suman ${total}%, deben sumar 100%.`, 'error');
+
+        const totalSlots = selectedDates.length * 8;
+        const rawSlots = [];
+        for (const date of selectedDates) {
+            const d = new Date(date + 'T12:00:00');
+            const label = `${'Dom Lun Mar Mié Jue Vie Sáb'.split(' ')[d.getDay()]} ${d.getDate()}`;
+            for (const slot of HOUR_SLOTS) {
+                rawSlots.push({ date, label, ...slot, pidx: null });
+            }
         }
+
+        const idxs = projects.map((_,i)=>i).filter(i=>projects[i].name.trim());
+        const exact = idxs.map(i => projects[i].pct / 100 * totalSlots);
+        const floor = exact.map(Math.floor);
+        let rem = totalSlots - floor.reduce((a,b)=>a+b, 0);
+        exact.map((v,i)=>({i,r:v-floor[i]}))
+             .sort((a,b)=>b.r-a.r)
+             .slice(0,rem)
+             .forEach(({i})=>floor[i]++);
+
+        let si = 0;
+        idxs.forEach((pidx, pi) => {
+            for (let s = 0; s < floor[pi]; s++) {
+                if (si < rawSlots.length) rawSlots[si++].pidx = pidx;
+            }
+        });
+
+        merged = mergeSlots(rawSlots.filter(s => s.pidx !== null));
     }
-
-    const idxs = projects.map((_,i)=>i).filter(i=>projects[i].name.trim());
-    const exact = idxs.map(i => projects[i].pct / 100 * totalSlots);
-    const floor = exact.map(Math.floor);
-    let rem = totalSlots - floor.reduce((a,b)=>a+b, 0);
-    exact.map((v,i)=>({i,r:v-floor[i]}))
-         .sort((a,b)=>b.r-a.r)
-         .slice(0,rem)
-         .forEach(({i})=>floor[i]++);
-
-    let si = 0;
-    idxs.forEach((pidx, pi) => {
-        for (let s = 0; s < floor[pi]; s++) {
-            if (si < rawSlots.length) rawSlots[si++].pidx = pidx;
-        }
-    });
-
-    const merged = mergeSlots(rawSlots.filter(s => s.pidx !== null));
     currentBlocks = merged;
     distributeOvertime();
     renderGrid(merged, currentOvertimeBlocks);
@@ -1215,6 +1210,23 @@ async function deleteClockifyEntry(apiKey, wsId, entryId) {
     await clockifyFetch(apiKey, `${CLOCKIFY_API}/workspaces/${wsId}/time-entries/${entryId}`, { method: 'DELETE' });
 }
 
+async function validateOvertimeDays(apiKey, wsId, dates) {
+    const { userId, workspaceId } = await getClockifyContext(apiKey, wsId);
+    const problems = [];
+    for (const date of dates) {
+        const entries = await fetchExistingEntries(apiKey, workspaceId, userId,
+            `${date}T00:00:00Z`, `${date}T23:59:59Z`);
+        let totalMin = 0;
+        for (const e of entries) {
+            const s = new Date(e.timeInterval.start);
+            const en = e.timeInterval.end ? new Date(e.timeInterval.end) : null;
+            if (en) totalMin += (en - s) / 60000;
+        }
+        if (totalMin < 8 * 60) problems.push({ date, hours: Math.round(totalMin / 60 * 10) / 10 });
+    }
+    return problems;
+}
+
 let _pendingLoad = null;
 
 async function loadToClockify() {
@@ -1241,6 +1253,23 @@ async function loadToClockify() {
     const allEntries = [...regularEntries, ...otEntries];
 
     document.getElementById('loadBtn').disabled = true;
+
+    if (clockifyKey && otEntries.length) {
+        showToast('Verificando horas regulares en Clockify...', 'info');
+        try {
+            const otDates = [...new Set(otEntries.map(e => e.date))];
+            const problems = await validateOvertimeDays(clockifyKey, clockifyWs, otDates);
+            if (problems.length) {
+                const list = problems.map(p => `${p.date} (${p.hours}h cargadas)`).join('\n');
+                if (!confirm(`Los siguientes días no tienen 8h regulares en Clockify:\n\n${list}\n\n¿Querés continuar de todas formas?`)) {
+                    document.getElementById('loadBtn').disabled = false;
+                    return;
+                }
+            }
+        } catch(e) {
+            console.warn('No se pudo validar horas regulares:', e.message);
+        }
+    }
 
     if (clockifyKey) {
         showToast('Verificando superposiciones...', 'info');
