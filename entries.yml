@@ -1,6 +1,6 @@
 timezone: "America/Argentina/Buenos_Aires"
 entries:
-  - date: "2026-04-01"
+  - date: "2026-05-04"
     start: "09:00"
     end: "13:00"
     project: "ALMA SADI"
@@ -8,7 +8,7 @@ entries:
     tags:
       - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-04-01"
+  - date: "2026-05-04"
     start: "14:00"
     end: "18:00"
     project: "ALMA SADI"
@@ -16,7 +16,7 @@ entries:
     tags:
       - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-04-06"
+  - date: "2026-05-05"
     start: "09:00"
     end: "13:00"
     project: "ALMA SADI"
@@ -24,7 +24,7 @@ entries:
     tags:
       - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-04-06"
+  - date: "2026-05-05"
     start: "14:00"
     end: "18:00"
     project: "ALMA SADI"
@@ -32,7 +32,7 @@ entries:
     tags:
       - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-04-07"
+  - date: "2026-05-06"
     start: "09:00"
     end: "13:00"
     project: "ALMA SADI"
@@ -40,7 +40,7 @@ entries:
     tags:
       - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-04-07"
+  - date: "2026-05-06"
     start: "14:00"
     end: "18:00"
     project: "ALMA SADI"
@@ -48,135 +48,7 @@ entries:
     tags:
       - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-04-08"
-    start: "09:00"
-    end: "13:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-08"
-    start: "14:00"
-    end: "18:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-09"
-    start: "09:00"
-    end: "13:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-09"
-    start: "14:00"
-    end: "18:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-10"
-    start: "09:00"
-    end: "13:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-10"
-    start: "14:00"
-    end: "18:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-13"
-    start: "09:00"
-    end: "13:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-13"
-    start: "14:00"
-    end: "18:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-14"
-    start: "09:00"
-    end: "13:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-14"
-    start: "14:00"
-    end: "18:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-15"
-    start: "09:00"
-    end: "13:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-15"
-    start: "14:00"
-    end: "18:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-16"
-    start: "09:00"
-    end: "13:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-16"
-    start: "14:00"
-    end: "18:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-17"
-    start: "09:00"
-    end: "13:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-17"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-20"
+  - date: "2026-05-07"
     start: "09:00"
     end: "13:00"
     project: "PAMAS"
@@ -184,7 +56,7 @@ entries:
     tags:
       - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-04-20"
+  - date: "2026-05-07"
     start: "14:00"
     end: "18:00"
     project: "PAMAS"
@@ -192,156 +64,34 @@ entries:
     tags:
       - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-04-21"
+  - date: "2026-05-08"
     start: "09:00"
-    end: "10:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-21"
-    start: "10:00"
     end: "13:00"
-    project: "PSSDV"
+    project: "Asistencia General a DNN"
+    client: "DNN"
     tags:
       - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-04-21"
+  - date: "2026-05-08"
+    start: "14:00"
+    end: "18:00"
+    project: "Asistencia General a DNN"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-11"
+    start: "09:00"
+    end: "13:00"
+    project: "Asistencia General a DNN"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-05-11"
     start: "14:00"
     end: "18:00"
     project: "PSSDV"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-22"
-    start: "09:00"
-    end: "13:00"
-    project: "PSSDV"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-22"
-    start: "14:00"
-    end: "18:00"
-    project: "PSSDV"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-23"
-    start: "09:00"
-    end: "13:00"
-    project: "PSSDV"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-23"
-    start: "14:00"
-    end: "18:00"
-    project: "PSSDV"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-24"
-    start: "09:00"
-    end: "10:00"
-    project: "PSSDV"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-24"
-    start: "10:00"
-    end: "13:00"
-    project: "PEHUC"
-    client: "DPI"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-24"
-    start: "14:00"
-    end: "18:00"
-    project: "PEHUC"
-    client: "DPI"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-27"
-    start: "09:00"
-    end: "13:00"
-    project: "PEHUC"
-    client: "DPI"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-27"
-    start: "14:00"
-    end: "16:00"
-    project: "PEHUC"
-    client: "DPI"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-27"
-    start: "16:00"
-    end: "18:00"
-    project: "PSMZS"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-28"
-    start: "09:00"
-    end: "13:00"
-    project: "PSMZS"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-28"
-    start: "14:00"
-    end: "18:00"
-    project: "PSMZS"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-29"
-    start: "09:00"
-    end: "12:00"
-    project: "PSMZS"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-29"
-    start: "12:00"
-    end: "13:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-29"
-    start: "14:00"
-    end: "18:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-30"
-    start: "09:00"
-    end: "13:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-04-30"
-    start: "14:00"
-    end: "18:00"
-    project: "ALMA SADI"
-    client: "DNN"
     tags:
       - "Gestion de Ingenieria"
     billable: true
