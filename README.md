@@ -1,251 +1,427 @@
 # Clockify Manager
 
-Herramienta para registrar horas en [Clockify](https://clockify.me) desde una interfaz web o directamente desde GitHub Actions. Permite distribuir horas de trabajo entre proyectos por día, semana o entrada individual, y las carga automáticamente via API.
+Herramienta para registrar horas en Clockify desde una página web sencilla, sin necesidad de instalar nada en tu computadora.
+
+> **¿Nunca usaste GitHub?** No hay problema. Esta guía te explica cada paso desde cero, incluyendo qué es cada cosa y exactamente dónde hacer clic.
 
 ---
 
 ## Índice
 
-1. [Descripción general](#1-descripción-general)
-2. [Requisitos previos](#2-requisitos-previos)
-3. [Paso 1 — Hacer fork del repositorio](#3-paso-1--hacer-fork-del-repositorio)
-4. [Paso 2 — Obtener el API Key de Clockify](#4-paso-2--obtener-el-api-key-de-clockify)
-5. [Paso 3 — Obtener el Workspace ID de Clockify](#5-paso-3--obtener-el-workspace-id-de-clockify)
-6. [Paso 4 — Crear un Personal Access Token de GitHub](#6-paso-4--crear-un-personal-access-token-de-github)
-7. [Paso 5 — Agregar secrets al repositorio](#7-paso-5--agregar-secrets-al-repositorio)
-8. [Paso 6 — Habilitar GitHub Pages](#8-paso-6--habilitar-github-pages)
-9. [Paso 7 — Configurar la interfaz web](#9-paso-7--configurar-la-interfaz-web)
-10. [Cómo usar la interfaz web](#10-cómo-usar-la-interfaz-web)
-11. [Actualizar la lista de proyectos](#11-actualizar-la-lista-de-proyectos)
-12. [Cargar horas desde GitHub Actions](#12-cargar-horas-desde-github-actions)
-13. [Configurar el schedule semanal](#13-configurar-el-schedule-semanal)
-14. [Uso local (Python)](#14-uso-local-python)
+- [¿Cómo funciona?](#cómo-funciona)
+- [Lo que vas a necesitar antes de empezar](#lo-que-vas-a-necesitar-antes-de-empezar)
+- [Paso 1 — Crear tu copia del repositorio (Fork)](#paso-1--crear-tu-copia-del-repositorio-fork)
+- [Paso 2 — Obtener tu clave de API de Clockify](#paso-2--obtener-tu-clave-de-api-de-clockify)
+- [Paso 3 — Obtener tu Workspace ID de Clockify](#paso-3--obtener-tu-workspace-id-de-clockify)
+- [Paso 4 — Crear un token de acceso en GitHub](#paso-4--crear-un-token-de-acceso-en-github)
+- [Paso 5 — Guardar tus claves en el repositorio](#paso-5--guardar-tus-claves-en-el-repositorio)
+- [Paso 6 — Activar tu página web](#paso-6--activar-tu-página-web)
+- [Paso 7 — Configurar la página web por primera vez](#paso-7--configurar-la-página-web-por-primera-vez)
+- [Cómo usar la página web día a día](#cómo-usar-la-página-web-día-a-día)
+- [Cómo actualizar la lista de proyectos](#cómo-actualizar-la-lista-de-proyectos)
+- [Preguntas frecuentes](#preguntas-frecuentes)
+- [Uso avanzado](#uso-avanzado)
 
 ---
 
-## 1. Descripción general
+## ¿Cómo funciona?
 
-El sistema tiene tres componentes:
+La herramienta tiene tres partes que trabajan juntas automáticamente:
 
-| Componente | Descripción |
-|---|---|
-| **Interfaz web** | Página en GitHub Pages para distribuir horas entre proyectos visualmente, día a día |
-| **GitHub Actions** | Workflow que ejecuta el script Python para cargar las horas en Clockify |
-| **Script Python** | `scripts/log_hours.py` — se conecta a la API de Clockify y crea las entradas |
+| Parte | Qué es | Para qué sirve |
+|---|---|---|
+| **Página web** | Una web que vos abrís desde el navegador | Elegís los días y proyectos, y apretás un botón para cargar |
+| **GitHub** | Un sitio web gratuito que guarda el código | Actúa como intermediario y ejecuta la carga automáticamente |
+| **Clockify** | Tu sistema de registro de horas | Donde quedan guardadas las entradas finalmente |
 
-**Flujo típico de uso:**
+**El proceso, en palabras simples:**
 
-1. Abrís la interfaz web → seleccionás los días trabajados → distribuís porcentajes por proyecto → presionás *Cargar a Clockify*.
-2. La web genera un archivo `entries.yml` con las entradas y lo sube al repositorio via API de GitHub.
-3. GitHub Actions detecta el archivo y ejecuta el script Python que carga todo en Clockify.
-
----
-
-## 2. Requisitos previos
-
-- Cuenta en [Clockify](https://clockify.me) (el plan gratuito es suficiente)
-- Cuenta en [GitHub](https://github.com) con acceso al repositorio
-
-No necesitás instalar nada en tu computadora para usar la interfaz web.
+1. Abrís la página web → elegís los días trabajados → asignás proyectos → apretás *Cargar a Clockify*
+2. La página sube un archivo con las horas a tu repositorio de GitHub
+3. GitHub detecta ese archivo y ejecuta automáticamente el proceso que carga todo en Clockify
+4. En 1–2 minutos, las horas aparecen en Clockify
 
 ---
 
-## 3. Paso 1 — Hacer fork del repositorio
+## Lo que vas a necesitar antes de empezar
 
-1. Entrá a la página del repositorio en GitHub.
-2. Hacé clic en el botón **Fork** (arriba a la derecha).
-3. Elegí tu cuenta personal como destino y confirmá.
+- **Una cuenta en Clockify** → [clockify.me](https://clockify.me) (el plan gratuito es suficiente)
+- **Una cuenta en GitHub** → [github.com](https://github.com) (también gratuita)
+- **Un navegador web** (Chrome, Firefox, Edge — el que uses normalmente)
 
-Esto crea una copia del repositorio en tu cuenta, sobre la cual vas a configurar todo.
-
----
-
-## 4. Paso 2 — Obtener el API Key de Clockify
-
-1. Iniciá sesión en [clockify.me](https://clockify.me).
-2. Hacé clic en tu **avatar** (arriba a la derecha) → **Profile Settings**.
-3. Bajá hasta la sección **API**.
-4. Copiá el valor del campo **API Key**.
-
-Guardalo en un lugar seguro, lo vas a necesitar en los pasos siguientes.
+No necesitás instalar ningún programa ni saber programar.
 
 ---
 
-## 5. Paso 3 — Obtener el Workspace ID de Clockify
+## Paso 1 — Crear tu copia del repositorio (Fork)
 
-El Workspace ID es opcional (se auto-detecta si no lo configurás), pero se recomienda fijarlo explícitamente.
+> **¿Qué es un repositorio?** Es como una carpeta en la nube que contiene todos los archivos del proyecto. Está alojada en GitHub.
+>
+> **¿Qué es un Fork?** Es hacer una copia de esa carpeta en tu propia cuenta de GitHub. Vas a trabajar sobre esa copia, no sobre el original.
 
-1. En Clockify, hacé clic en tu nombre de workspace (barra lateral izquierda, arriba).
-2. Seleccioná **Workspace Settings**.
-3. Copiá la URL del navegador — el ID es la cadena alfanumérica que aparece en ella:
+### Pasos:
+
+1. Abrí la página principal de este repositorio en GitHub (la misma donde estás leyendo esto).
+
+2. Buscá el botón **Fork** en la esquina superior derecha de la página y hacé clic en él.
+
+   > 📸 *Captura sugerida: vista general del repositorio con el botón "Fork" destacado en la esquina superior derecha*
+
+3. Se abre una pantalla que pregunta dónde crear la copia. Bajo **Owner**, asegurate de que esté seleccionada **tu cuenta personal** (no la de otra organización).
+
+4. Dejá el nombre como está y hacé clic en el botón verde **Create fork**.
+
+   > 📸 *Captura sugerida: pantalla de creación de fork con el campo Owner y el botón "Create fork"*
+
+5. GitHub te redirige automáticamente a tu nueva copia del repositorio. La URL debería decir `github.com/TU-USUARIO/clockify_manager`.
+
+> ✅ **¿Cómo sé que funcionó?** En la esquina superior izquierda vas a ver el nombre de tu repositorio con una leyenda que dice *"forked from ..."*
+
+---
+
+## Paso 2 — Obtener tu clave de API de Clockify
+
+> **¿Qué es una API Key?** Es una contraseña especial que le permite a esta herramienta hablar con Clockify en tu nombre. Clockify la genera automáticamente para vos.
+
+### Pasos:
+
+1. Abrí [clockify.me](https://clockify.me) e iniciá sesión con tu usuario y contraseña.
+
+2. Hacé clic en tu **foto de perfil o iniciales** en la esquina superior derecha.
+
+   > 📸 *Captura sugerida: menú desplegable del avatar en Clockify con la opción "Profile Settings"*
+
+3. En el menú que aparece, hacé clic en **Profile Settings**.
+
+4. En la página de configuración, bajá con el scroll hasta encontrar la sección **API**.
+
+   > 📸 *Captura sugerida: sección API dentro de Profile Settings, con el campo API Key visible*
+
+5. Vas a ver un campo que dice **API Key** con una cadena de letras y números. Hacé clic en el ícono de copiar que está al lado.
+
+6. Guardá ese texto en un lugar seguro (por ejemplo, en un archivo de texto o en el Bloc de Notas). Lo vas a necesitar en los pasos 5 y 7.
+
+> ⚠️ **Importante:** Esta clave es como una contraseña. No la compartas con nadie ni la publiques en ningún lado.
+
+---
+
+## Paso 3 — Obtener tu Workspace ID de Clockify
+
+> **¿Qué es el Workspace?** Es el espacio de trabajo dentro de Clockify donde están todos tus proyectos. El Workspace ID es el número identificador de ese espacio.
+
+### Pasos:
+
+1. Estando en Clockify, mirá la barra lateral izquierda. Arriba del todo vas a ver el nombre de tu workspace (generalmente es tu nombre o el nombre de tu empresa).
+
+2. Hacé clic en ese nombre. Aparece un menú desplegable.
+
+   > 📸 *Captura sugerida: barra lateral de Clockify con el nombre del workspace y el menú desplegable*
+
+3. Hacé clic en **Workspace Settings**.
+
+4. Mirá la barra de direcciones de tu navegador. La URL va a tener un formato similar a este:
+
    ```
    https://app.clockify.me/en/settings/workspace/XXXXXXXXXXXXXXXXXXXXXXXX
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^
-                                                   este es el Workspace ID
    ```
 
----
+5. La parte que está al final, después de `/workspace/`, es tu **Workspace ID**. Copiá esa cadena de letras y números y guardala junto con tu API Key.
 
-## 6. Paso 4 — Crear un Personal Access Token de GitHub
+   > 📸 *Captura sugerida: barra de direcciones del navegador con el Workspace ID subrayado*
 
-La interfaz web necesita un token de GitHub para poder subir archivos y disparar el workflow de Actions directamente desde el navegador.
-
-1. Iniciá sesión en GitHub → hacé clic en tu **avatar** (arriba a la derecha) → **Settings**.
-2. En el menú lateral izquierdo, bajá hasta el final y hacé clic en **Developer settings**.
-3. Seleccioná **Personal access tokens** → **Tokens (classic)**.
-4. Hacé clic en **Generate new token** → **Generate new token (classic)**.
-5. Completá los campos:
-   - **Note:** `Clockify Manager` (cualquier nombre descriptivo)
-   - **Expiration:** elegí la duración que prefieras (90 días o sin vencimiento)
-   - **Scopes:** tildá únicamente **`repo`** (incluye lectura/escritura al repositorio y permisos para disparar workflows)
-6. Hacé clic en **Generate token** al final de la página.
-7. **Copiá el token inmediatamente** — solo se muestra una vez. Empieza con `ghp_`.
+> 💡 **Consejo:** Si no encontrás el Workspace ID, no te preocupes. La herramienta puede detectarlo automáticamente. Podés dejarlo vacío en los pasos siguientes.
 
 ---
 
-## 7. Paso 5 — Agregar secrets al repositorio
+## Paso 4 — Crear un token de acceso en GitHub
 
-Los secrets son variables cifradas que usa GitHub Actions para conectarse a Clockify sin exponer las credenciales en el código.
+> **¿Para qué sirve esto?** La página web necesita un permiso especial para poder guardar archivos en tu repositorio de GitHub y disparar el proceso automático. Ese permiso es el "Personal Access Token" — es como una contraseña de un solo uso para aplicaciones.
 
-1. En tu repositorio de GitHub, andá a **Settings** → **Secrets and variables** → **Actions**.
-2. Hacé clic en **New repository secret** para cada uno de los siguientes:
+### Pasos:
 
-| Nombre del secret | Valor | Obligatorio |
-|---|---|---|
-| `CLOCKIFY_API_KEY` | Tu API Key de Clockify (del Paso 2) | Sí |
-| `CLOCKIFY_WORKSPACE_ID` | Tu Workspace ID (del Paso 3) | No (se auto-detecta) |
+1. Abrí [github.com](https://github.com) e iniciá sesión.
+
+2. Hacé clic en tu **foto de perfil** en la esquina superior derecha → **Settings**.
+
+   > 📸 *Captura sugerida: menú desplegable del avatar en GitHub con la opción "Settings"*
+
+3. En la página de configuración, buscá el menú lateral izquierdo. Bajá hasta el final del todo y hacé clic en **Developer settings**.
+
+   > 📸 *Captura sugerida: menú lateral de Settings con "Developer settings" al final*
+
+4. En la nueva página, hacé clic en **Personal access tokens** → **Tokens (classic)**.
+
+5. Hacé clic en el botón **Generate new token** → **Generate new token (classic)**.
+
+   > 📸 *Captura sugerida: pantalla de Personal access tokens con el botón "Generate new token"*
+
+6. GitHub puede pedirte que confirmes tu contraseña. Ingresala si es necesario.
+
+7. Completá el formulario:
+   - **Note:** Escribí `Clockify Manager` (es solo un nombre para que recuerdes para qué es)
+   - **Expiration:** Elegí cuánto tiempo querés que dure. Si no querés renovarlo periódicamente, elegí **No expiration**
+   - **Select scopes:** Buscá la opción **`repo`** y tildá la casilla que está al lado. Con eso es suficiente.
+
+   > 📸 *Captura sugerida: formulario de nuevo token con el campo Note completado y el scope "repo" tildado*
+
+8. Bajá hasta el final de la página y hacé clic en el botón verde **Generate token**.
+
+9. La página muestra el token una sola vez, comenzando con `ghp_`. **Copialo ahora** y guardalo junto con tus otros datos, porque no vas a poder verlo de nuevo.
+
+   > 📸 *Captura sugerida: token generado visible en pantalla con el botón de copiar*
+
+> ⚠️ **Importante:** Si cerrás esta página sin copiarlo, tendrás que generar uno nuevo. No hay forma de recuperarlo.
 
 ---
 
-## 8. Paso 6 — Habilitar GitHub Pages
+## Paso 5 — Guardar tus claves en el repositorio
 
-La interfaz web se sirve automáticamente desde la carpeta `docs/` de la rama `main`.
+> **¿Qué son los "Secrets"?** Son variables secretas que GitHub guarda de forma cifrada. El proceso automático las usa para conectarse a Clockify, pero nadie puede verlas (ni vos desde GitHub). Es la forma segura de guardar contraseñas en este tipo de herramientas.
 
-1. En tu repositorio, andá a **Settings** → **Pages** (menú lateral, sección *Code and automation*).
-2. En **Source**, seleccioná **Deploy from a branch**.
-3. En **Branch**, elegí `main` y la carpeta `/docs`.
+### Pasos:
+
+1. Andá a tu repositorio en GitHub (`github.com/TU-USUARIO/clockify_manager`).
+
+2. Hacé clic en la pestaña **Settings** (es la última pestaña en la barra del repositorio).
+
+   > 📸 *Captura sugerida: barra de pestañas del repositorio con "Settings" al final*
+
+3. En el menú lateral izquierdo, buscá **Secrets and variables** y hacé clic. Después hacé clic en **Actions**.
+
+   > 📸 *Captura sugerida: menú lateral de Settings con "Secrets and variables" > "Actions"*
+
+4. Hacé clic en el botón **New repository secret**.
+
+5. Creá el primer secret:
+   - **Name:** `CLOCKIFY_API_KEY`
+   - **Secret:** Pegá tu API Key de Clockify (la del Paso 2)
+   - Hacé clic en **Add secret**
+
+   > 📸 *Captura sugerida: formulario de nuevo secret con el nombre y valor completados*
+
+6. Hacé clic de nuevo en **New repository secret** y creá el segundo:
+   - **Name:** `CLOCKIFY_WORKSPACE_ID`
+   - **Secret:** Pegá tu Workspace ID (el del Paso 3). Si no lo tenés, podés omitir este secret.
+   - Hacé clic en **Add secret**
+
+> ✅ **¿Cómo sé que funcionó?** Vas a ver los dos secrets listados en la página. No se muestra su contenido — solo el nombre y la fecha de creación. Eso es correcto.
+
+---
+
+## Paso 6 — Activar tu página web
+
+> **¿Qué es GitHub Pages?** Es un servicio gratuito de GitHub que convierte los archivos de tu repositorio en una página web accesible desde cualquier navegador.
+
+### Pasos:
+
+1. En tu repositorio, andá a **Settings** → buscá **Pages** en el menú lateral izquierdo (está en la sección *Code and automation*).
+
+   > 📸 *Captura sugerida: menú lateral de Settings con "Pages" visible*
+
+2. En la sección **Build and deployment**, bajo **Source**, asegurate de que esté seleccionada la opción **Deploy from a branch**.
+
+3. En el selector de **Branch**, elegí **`main`**. En el selector de carpeta que aparece al lado, elegí **`/docs`**.
+
+   > 📸 *Captura sugerida: sección de configuración de Pages con branch "main" y carpeta "/docs" seleccionados*
+
 4. Hacé clic en **Save**.
 
-Después de unos segundos, GitHub muestra la URL de tu página. Tiene el formato:
+5. Esperá unos segundos y recargá la página. Arriba de todo vas a ver un mensaje con la URL de tu página, con el formato:
 
-```
-https://<tu-usuario>.github.io/<nombre-del-repo>/
-```
+   ```
+   https://TU-USUARIO.github.io/clockify_manager/
+   ```
+
+6. **Guardá esa URL** — es la dirección de tu página web para cargar horas.
+
+> 💡 **Consejo:** La primera vez puede tardar hasta 1–2 minutos en aparecer. Si el mensaje no aparece, recargá la página después de un momento.
 
 ---
 
-## 9. Paso 7 — Configurar la interfaz web
+## Paso 7 — Configurar la página web por primera vez
 
-La primera vez que abrís la interfaz web, necesitás ingresar tus credenciales. Se guardan en el almacenamiento local del navegador y nunca se suben a ningún servidor.
+La primera vez que abrís tu página web, tenés que ingresar tus credenciales. Se guardan **solo en tu navegador** — nunca se suben a ningún servidor.
 
-1. Abrí la URL de tu GitHub Pages (del paso anterior).
-2. Hacé clic en el ícono de engranaje ⚙️ (arriba a la derecha) para abrir la configuración.
-3. Completá los cuatro campos:
+### Pasos:
 
-| Campo | Valor |
-|---|---|
-| **GitHub Token** | El Personal Access Token que creaste en el Paso 4 (empieza con `ghp_`) |
-| **Repositorio** | Tu repositorio en formato `usuario/nombre-repo` (ej: `juanperez/clockify_manager`) |
-| **Clockify API Key** | Tu API Key de Clockify (del Paso 2) |
-| **Workspace ID** | Tu Workspace ID de Clockify (del Paso 3) |
+1. Abrí la URL de tu página (`https://TU-USUARIO.github.io/clockify_manager/`).
+
+2. Hacé clic en el botón **Configuración** en la esquina superior derecha (tiene un ícono de engranaje ⚙).
+
+   > 📸 *Captura sugerida: página principal de Clockify Manager con el botón "Configuración" destacado*
+
+3. Se abre un panel. Completá los cuatro campos:
+
+   | Campo | Qué poner |
+   |---|---|
+   | **GitHub Personal Access Token** | El token que copiaste en el Paso 4 (empieza con `ghp_`) |
+   | **Repositorio GitHub** | Tu usuario y nombre del repo, así: `TU-USUARIO/clockify_manager` |
+   | **Clockify API Key** | Tu API Key de Clockify (la del Paso 2) |
+   | **Workspace ID** | Tu Workspace ID (el del Paso 3). Podés dejarlo vacío si no lo tenés. |
+
+   > 📸 *Captura sugerida: panel de configuración con los cuatro campos completados*
 
 4. Hacé clic en **Guardar**.
 
+> ✅ **¡Listo!** La configuración inicial está completa. No necesitás repetir estos pasos en la misma computadora. Si usás otra computadora o borrás los datos del navegador, tendrás que configurarlo de nuevo.
+
 ---
 
-## 10. Cómo usar la interfaz web
+## Cómo usar la página web día a día
 
-### Seleccionar días trabajados
+Una vez configurada, el uso habitual es muy simple:
 
-- El calendario muestra el mes actual. Los fines de semana están deshabilitados.
-- Hacé clic en los días que trabajaste para seleccionarlos (se resaltan en azul).
-- Para cambiar de mes usá las flechas `‹` `›`.
+### 1. Seleccioná los días trabajados
 
-### Agregar proyectos
+- El calendario muestra el mes actual.
+- Hacé clic en cada día que trabajaste para seleccionarlo (se pone azul).
+- Los sábados y domingos no se pueden seleccionar.
+- Usá las flechas **‹ ›** para cambiar de mes.
+- El botón **Mes completo** selecciona todos los días hábiles del mes de un solo clic.
+- El botón **Limpiar selección** deselecciona todo.
+
+> 📸 *Captura sugerida: calendario con varios días seleccionados en azul y los botones "Mes completo" y "Limpiar selección"*
+
+Los feriados nacionales aparecen listados debajo del calendario como referencia.
+
+### 2. Agregá los proyectos en los que trabajaste
 
 1. Hacé clic en **+ Agregar proyecto**.
-2. Seleccioná el **proyecto** del menú desplegable.
-3. Seleccioná el **cliente** (el menú se filtra según el proyecto elegido).
-4. Seleccioná la **etiqueta** (tipo de trabajo): *Ejecución de Ingeniería*, *Gestión de Ingeniería*, *Revisión de Ingeniería*, o *Visita a Obra*.
-5. Ajustá el **porcentaje** de horas con el slider o escribiendo el número directamente.
+2. En la tarjeta que aparece, seleccioná el **proyecto** del menú desplegable.
+3. Si el proyecto tiene más de un cliente, elegí el **cliente** correspondiente.
+4. Elegí la **etiqueta** (tipo de trabajo): *Gestión de Ingeniería*, *Ejecución de Ingeniería*, etc.
+5. Ajustá la **ponderación** (los botones del 1 al 8): indica qué tanto tiempo le dedicaste a ese proyecto respecto a los demás. Un 8 significa que le dedicaste el máximo, un 1 el mínimo. La herramienta calcula el porcentaje automáticamente.
+
+   > 💡 **Ejemplo:** Si trabajaste igual en dos proyectos, ponés 4 en ambos → 50% cada uno. Si a uno le dedicaste el doble, ponés 8 y 4 respectivamente → 67% y 33%.
+
 6. Repetí para cada proyecto adicional.
 
-> El total de porcentajes debe sumar exactamente 100 %. La barra inferior indica si está OK o si falta ajustar.
+> 📸 *Captura sugerida: sección de proyectos con dos tarjetas de proyecto, mostrando los selectores y los botones de ponderación 1-8*
 
-### Vista previa en grilla
+Si preferís ingresar los porcentajes manualmente, hacé clic en **Porcentual** en el selector de modo. El último proyecto calcula automáticamente su porcentaje para que la suma dé siempre 100%.
 
-La grilla de la derecha muestra cómo quedan distribuidas las entradas por día. Los bloques de color representan entradas; los bloques punteados grises indican que ese día no tiene horas asignadas.
+### 3. (Opcional) Horas extra después de las 18:00
 
-Cada día laboral tiene **8 horas** distribuidas en dos tramos: mañana (09:00–13:00) y tarde (14:00–18:00). La distribución se hace con granularidad de 1 hora, y los bloques consecutivos del mismo proyecto se combinan automáticamente en una sola entrada.
+Si trabajaste horas extra más allá de tu horario habitual:
 
-### Cargar las horas
+1. Hacé clic en **+ Agregar horas extra** (en la sección "Horas Extra", con ícono ⚡).
+2. Seleccioná el proyecto al que corresponden esas horas.
+3. En el campo **Hs extra**, indicá cuántas horas extra trabajaste **por día** (máximo 4 por día, de 18:00 a 22:00).
+4. Podés agregar varios bloques de horas extra para diferentes proyectos.
 
-1. Hacé clic en **Vista previa** para ver exactamente qué entradas se van a crear.
-2. Si todo está bien, hacé clic en **Cargar a Clockify**.
-3. La web verifica si ya existen entradas en Clockify para esos días:
-   - Si hay **superposición**, te consulta si querés saltear los conflictos o sobreescribir.
-4. Una vez confirmado, se genera el archivo `entries.yml`, se sube al repositorio y se dispara el workflow de GitHub Actions.
-5. El workflow tarda ~1–2 minutos. Podés seguirlo en **Actions** → **Log Hours to Clockify**.
+> 📸 *Captura sugerida: sección "Horas Extra" con una tarjeta de proyecto extra y el campo de horas completado*
 
----
+### 4. Generá la distribución
 
-## 11. Actualizar la lista de proyectos
+Hacé clic en el botón **Generar distribución**.
 
-La interfaz web carga los proyectos y clientes disponibles desde el archivo `docs/projects.json`, que se genera automáticamente a partir de un Excel exportado de Clockify.
+La parte inferior de la pantalla muestra una grilla con la distribución de horas por día. Cada proyecto tiene un color diferente. Revisá que todo se vea correcto.
 
-### Exportar el Excel desde Clockify
+> 📸 *Captura sugerida: grilla de distribución diaria con bloques de colores por proyecto*
 
-1. En Clockify, andá a **Projects** (menú lateral).
-2. Hacé clic en el ícono de exportación (arriba a la derecha) → **Export as Excel**.
-3. El archivo descargado tiene las columnas **Name** (proyecto) y **Client** (cliente), que es exactamente el formato que espera el script.
+### 5. Cargá las horas en Clockify
 
-### Subir el Excel al repositorio
+1. Hacé clic en **Cargar a Clockify**.
 
-1. En tu repositorio de GitHub, hacé clic en **Add file → Upload files**.
-2. Subí el archivo con el nombre exacto **`projects.xlsx`** (en la raíz del repositorio).
-3. Hacé clic en **Commit changes** → **Commit directly to the `main` branch**.
+2. La herramienta verifica automáticamente si ya existen entradas en Clockify para esos días:
+   - Si hay un **conflicto** (ya hay horas cargadas para ese horario), te pregunta si querés saltear esas entradas o sobreescribirlas.
+   - Si estás cargando **horas extra**, verifica que esos días ya tengan las 8 horas regulares cargadas en Clockify. Si no las tienen, te avisa antes de continuar.
 
-Eso es todo. El workflow **Convert Projects Excel to JSON** se dispara automáticamente, convierte el Excel al archivo `docs/projects.json` y hace el commit. En la próxima apertura de la interfaz web ya aparecen los proyectos actualizados.
+3. El proceso tarda 1–2 minutos. Podés seguir el progreso en GitHub yendo a la pestaña **Actions** de tu repositorio.
 
-> Si subís el Excel con otro nombre, el workflow no se dispara. El nombre debe ser exactamente `projects.xlsx`.
+> 📸 *Captura sugerida: pestaña Actions de GitHub mostrando el workflow "Log Hours to Clockify" ejecutándose*
+
+> ✅ **¿Cómo sé que funcionó?** El workflow termina con un ícono verde ✅. Si hay un error, aparece un ícono rojo ❌ — en ese caso, hacé clic en el workflow para ver el detalle del error.
 
 ---
 
-## 12. Cargar horas desde GitHub Actions
+## Cómo actualizar la lista de proyectos
 
+La página web obtiene la lista de proyectos desde Clockify a través de un archivo Excel. Cuando se agregan o modifican proyectos en Clockify, hay que actualizar ese archivo.
 
-También podés disparar el workflow manualmente desde GitHub para casos puntuales.
+### Paso A — Exportar los proyectos desde Clockify
 
-Ir a: **Actions** → **Log Hours to Clockify** → **Run workflow**
+1. En Clockify, hacé clic en **Projects** en el menú lateral izquierdo.
 
-### Modo `weekly` — Carga semanal desde schedule
+2. En la pantalla de proyectos, buscá el ícono de exportación (generalmente arriba a la derecha, parece una flecha hacia abajo o un ícono de descarga).
 
-Carga todas las horas de una semana según el archivo `weekly_schedule.yml`.
+   > 📸 *Captura sugerida: pantalla de proyectos de Clockify con el ícono de exportación destacado*
 
-| Campo | Descripción |
-|---|---|
-| Mode | `weekly` |
-| Week start | Lunes de la semana a cargar (`YYYY-MM-DD`). Vacío = semana actual. |
-| Schedule file | Ruta al archivo (default: `weekly_schedule.yml`) |
-| Dry run | `true` para previsualizar sin crear entradas |
+3. Hacé clic en **Export as Excel** (o "Exportar como Excel").
 
-**Recomendación:** probá siempre con `dry run: true` antes de crear las entradas reales.
+4. Se descarga un archivo `.xlsx` a tu computadora.
 
-### Modo `single` — Una sola entrada
+### Paso B — Subir el archivo a GitHub
 
-| Campo | Ejemplo |
-|---|---|
-| Mode | `single` |
-| Date | `2026-05-09` |
-| Start time | `09:00` |
-| End time | `18:00` |
-| Description | `Desarrollo` |
-| Project | `BESS AMBA` |
-| Billable | `true` / `false` |
+1. Andá a tu repositorio en GitHub.
 
-### Modo `batch` — Múltiples entradas desde archivo
+2. Hacé clic en el botón **Add file** → **Upload files**.
 
-Creá un archivo `entries.yml` en la raíz del repositorio con el siguiente formato y luego corré el workflow con Mode = `batch`:
+   > 📸 *Captura sugerida: repositorio en GitHub con el botón "Add file" desplegado*
+
+3. Arrastrá el archivo descargado al área de carga, **o** hacé clic en *choose your files* para buscarlo en tu computadora.
+
+4. **Importante:** Antes de subir, renombrá el archivo a exactamente **`projects.xlsx`** (en minúsculas, sin espacios). Si el archivo tiene otro nombre, el proceso automático no se activa.
+
+   > 💡 **¿Cómo renombrar?** En Windows: clic derecho sobre el archivo → Cambiar nombre. En Mac: doble clic sobre el nombre del archivo.
+
+5. Una vez cargado, bajá y hacé clic en **Commit changes** → **Commit directly to the `main` branch** → **Commit changes**.
+
+   > 📸 *Captura sugerida: pantalla de commit con el botón "Commit changes" destacado*
+
+6. GitHub ejecuta automáticamente un proceso que convierte el Excel a un formato que entiende la página web. Tarda 1–2 minutos.
+
+7. La próxima vez que abrás la página web, la lista de proyectos ya va a estar actualizada.
+
+> ⚠️ **El nombre del archivo debe ser exactamente `projects.xlsx`**, con esa ortografía y sin espacios. Si lo subís con otro nombre, tendrás que borrarlo y repetir el proceso.
+
+---
+
+## Preguntas frecuentes
+
+**¿Mis contraseñas y claves están seguras?**
+
+Sí. Las claves que ingresás en la configuración de la página web se guardan solo en tu navegador (en lo que se llama "almacenamiento local") y nunca se suben a ningún servidor. Los secrets que guardás en GitHub están cifrados y ni siquiera GitHub los puede leer.
+
+**¿El proceso de carga puede crear entradas duplicadas?**
+
+No, porque la herramienta verifica automáticamente si ya hay entradas para esos horarios antes de cargar. Si detecta una superposición, te pregunta qué hacer.
+
+**¿Qué pasa si el workflow falla?**
+
+Podés ver el detalle del error en la pestaña **Actions** de tu repositorio. Hacé clic en el workflow que falló (tiene un ícono ❌) → hacé clic en el paso que falló para ver el mensaje de error.
+
+**Mi token de GitHub venció. ¿Qué hago?**
+
+Repetí el Paso 4 para generar un nuevo token, y luego actualizalo en la configuración de la página web (ícono de engranaje ⚙ → campo *GitHub Personal Access Token*).
+
+**¿Puedo usar la herramienta desde cualquier computadora?**
+
+Sí, la página web funciona desde cualquier navegador. Pero la configuración (token, API Key, etc.) se guarda solo en el navegador donde la cargaste. En una computadora nueva, tendrás que ingresar los datos de configuración de nuevo (Paso 7).
+
+**Los proyectos que aparecen en la lista no son los correctos.**
+
+Actualizá el archivo `projects.xlsx` siguiendo los pasos de la sección [Cómo actualizar la lista de proyectos](#cómo-actualizar-la-lista-de-proyectos).
+
+---
+
+## Uso avanzado
+
+Esta sección es para usuarios con conocimientos técnicos que quieran usar funciones adicionales.
+
+### Disparar la carga manualmente desde GitHub
+
+Podés iniciar el proceso de carga directamente desde GitHub sin usar la página web:
+
+1. Andá a la pestaña **Actions** de tu repositorio.
+2. En el menú lateral izquierdo, hacé clic en **Log Hours to Clockify**.
+3. Hacé clic en **Run workflow**.
+
+Podés elegir entre tres modos:
+
+**Modo `batch` — Múltiples entradas desde archivo**
+
+Creá un archivo llamado `entries.yml` en la raíz de tu repositorio con este formato:
 
 ```yaml
 timezone: "America/Argentina/Buenos_Aires"
@@ -270,18 +446,27 @@ entries:
     billable: false
 ```
 
----
+Luego corré el workflow con **Mode = `batch`**.
 
-## 13. Configurar el schedule semanal
+**Modo `single` — Una sola entrada**
 
-El archivo `weekly_schedule.yml` define un horario recurrente que se aplica semana a semana. Es útil si tenés una distribución fija de proyectos.
+| Campo | Ejemplo |
+|---|---|
+| Mode | `single` |
+| Date | `2026-05-09` |
+| Start time | `09:00` |
+| End time | `18:00` |
+| Description | `Desarrollo` |
+| Project | `BESS AMBA` |
+| Billable | `true` |
 
-### Estructura del archivo
+**Modo `weekly` — Carga semanal recurrente**
+
+Usa el archivo `weekly_schedule.yml` para definir un horario fijo que se repite semana a semana. Útil para automatizar la carga con un schedule programado.
 
 ```yaml
 timezone: "America/Argentina/Buenos_Aires"
 
-# Horario por defecto — se aplica todas las semanas
 default:
   monday:
     - start: "09:00"
@@ -297,91 +482,27 @@ default:
       client: "O&M"
       billable: false
 
-  tuesday:
-    - start: "09:00"
-      end: "18:00"
-      description: "Desarrollo"
-      project: "ALMA SADI"
-      client: "DNN"
-      billable: true
-
-  # wednesday: []   # feriado o día libre permanente
-
-# Semanas con variaciones (clave = lunes de la semana en YYYY-MM-DD)
+# Semanas con variaciones
 weeks:
   "2026-05-11":
-    wednesday: []     # día libre solo esa semana
-    friday:
-      - start: "09:00"
-        end: "18:00"
-        description: "Entrega sprint"
-        project: "BESS AMBA"
-        client: "DNN"
-        billable: true
+    wednesday: []   # día libre esa semana
 ```
 
-### Reglas
+> 💡 Probá siempre con **Dry run = `true`** primero para previsualizar sin crear entradas reales.
 
-| Situación | Cómo hacerlo |
-|---|---|
-| Día libre permanente | No listar el día en `default` |
-| Día libre una semana puntual | `wednesday: []` bajo `weeks.YYYY-MM-DD` |
-| Semana distinta al default | Agregar la semana bajo `weeks` con solo los días que cambian |
-| Cambiar proyectos para siempre | Actualizar los `project` en `default` |
+### Ejecución local con Python
 
-### Campos por entrada
-
-| Campo | Requerido | Descripción |
-|---|---|---|
-| `start` / `end` | Sí | Hora en formato `HH:MM`, en la zona horaria del archivo |
-| `description` | Sí | Texto libre |
-| `project` | No | Nombre exacto del proyecto en Clockify |
-| `client` | No | Nombre exacto del cliente (necesario si un proyecto tiene varios clientes) |
-| `billable` | No | `true` / `false` (default: `false`) |
-| `tags` | No | Lista de nombres de tags de Clockify |
-
----
-
-## 14. Uso local (Python)
-
-Si preferís ejecutar el script directamente desde tu computadora sin GitHub Actions:
-
-### Instalación
+Si preferís ejecutar el script desde tu propia computadora:
 
 ```bash
 pip install requests pyyaml tzdata
-```
 
-### Variables de entorno
-
-```bash
 export CLOCKIFY_API_KEY=tu_api_key
-export CLOCKIFY_WORKSPACE_ID=tu_workspace_id   # opcional
-```
+export CLOCKIFY_WORKSPACE_ID=tu_workspace_id
 
-### Comandos
-
-```bash
-# Previsualizar la semana actual (sin crear entradas)
-python scripts/log_hours.py weekly --schedule weekly_schedule.yml --dry-run
-
-# Cargar la semana actual
-python scripts/log_hours.py weekly --schedule weekly_schedule.yml
-
-# Cargar una semana específica
-python scripts/log_hours.py weekly --schedule weekly_schedule.yml --week 2026-05-04
-
-# Entrada individual
-python scripts/log_hours.py single \
-  --date 2026-05-09 --start 09:00 --end 18:00 \
-  --description "Desarrollo" --project "BESS AMBA" \
-  --timezone "America/Argentina/Buenos_Aires"
-
-# Batch desde archivo (previsualizar primero)
+# Previsualizar
 python scripts/log_hours.py batch --file entries.yml --dry-run
+
+# Cargar
 python scripts/log_hours.py batch --file entries.yml
 ```
-
-### Detección de superposición
-
-El script verifica automáticamente que no haya entradas que se superpongan, tanto entre las entradas nuevas como contra las ya existentes en Clockify. Si detecta un conflicto, cancela toda la carga y muestra un mensaje indicando qué entradas se superponen.
