@@ -65,13 +65,9 @@ No necesitás instalar ningún programa ni saber programar.
 
 2. Buscá el botón **Fork** en la esquina superior derecha de la página y hacé clic en él.
 
-   > 📸 *Captura sugerida: vista general del repositorio con el botón "Fork" destacado en la esquina superior derecha*
-
 3. Se abre una pantalla que pregunta dónde crear la copia. Bajo **Owner**, asegurate de que esté seleccionada **tu cuenta personal** (no la de otra organización).
 
 4. Dejá el nombre como está y hacé clic en el botón verde **Create fork**.
-
-   > 📸 *Captura sugerida: pantalla de creación de fork con el campo Owner y el botón "Create fork"*
 
 5. GitHub te redirige automáticamente a tu nueva copia del repositorio. La URL debería decir `github.com/TU-USUARIO/clockify_manager`.
 
@@ -89,13 +85,9 @@ No necesitás instalar ningún programa ni saber programar.
 
 2. Hacé clic en tu **foto de perfil o iniciales** en la esquina superior derecha.
 
-   > 📸 *Captura sugerida: menú desplegable del avatar en Clockify con la opción "Profile Settings"*
-
 3. En el menú que aparece, hacé clic en **Profile Settings**.
 
 4. En la página de configuración, bajá con el scroll hasta encontrar la sección **API**.
-
-   > 📸 *Captura sugerida: sección API dentro de Profile Settings, con el campo API Key visible*
 
 5. Vas a ver un campo que dice **API Key** con una cadena de letras y números. Hacé clic en el ícono de copiar que está al lado.
 
@@ -115,8 +107,6 @@ No necesitás instalar ningún programa ni saber programar.
 
 2. Hacé clic en ese nombre. Aparece un menú desplegable.
 
-   > 📸 *Captura sugerida: barra lateral de Clockify con el nombre del workspace y el menú desplegable*
-
 3. Hacé clic en **Workspace Settings**.
 
 4. Mirá la barra de direcciones de tu navegador. La URL va a tener un formato similar a este:
@@ -126,8 +116,6 @@ No necesitás instalar ningún programa ni saber programar.
    ```
 
 5. La parte que está al final, después de `/workspace/`, es tu **Workspace ID**. Copiá esa cadena de letras y números y guardala junto con tu API Key.
-
-   > 📸 *Captura sugerida: barra de direcciones del navegador con el Workspace ID subrayado*
 
 > 💡 **Consejo:** Si no encontrás el Workspace ID, no te preocupes. La herramienta puede detectarlo automáticamente. Podés dejarlo vacío en los pasos siguientes.
 
@@ -143,17 +131,11 @@ No necesitás instalar ningún programa ni saber programar.
 
 2. Hacé clic en tu **foto de perfil** en la esquina superior derecha → **Settings**.
 
-   > 📸 *Captura sugerida: menú desplegable del avatar en GitHub con la opción "Settings"*
-
 3. En la página de configuración, buscá el menú lateral izquierdo. Bajá hasta el final del todo y hacé clic en **Developer settings**.
-
-   > 📸 *Captura sugerida: menú lateral de Settings con "Developer settings" al final*
 
 4. En la nueva página, hacé clic en **Personal access tokens** → **Tokens (classic)**.
 
 5. Hacé clic en el botón **Generate new token** → **Generate new token (classic)**.
-
-   > 📸 *Captura sugerida: pantalla de Personal access tokens con el botón "Generate new token"*
 
 6. GitHub puede pedirte que confirmes tu contraseña. Ingresala si es necesario.
 
@@ -162,13 +144,9 @@ No necesitás instalar ningún programa ni saber programar.
    - **Expiration:** Elegí cuánto tiempo querés que dure. Si no querés renovarlo periódicamente, elegí **No expiration**
    - **Select scopes:** Buscá la opción **`repo`** y tildá la casilla que está al lado. Con eso es suficiente.
 
-   > 📸 *Captura sugerida: formulario de nuevo token con el campo Note completado y el scope "repo" tildado*
-
 8. Bajá hasta el final de la página y hacé clic en el botón verde **Generate token**.
 
 9. La página muestra el token una sola vez, comenzando con `ghp_`. **Copialo ahora** y guardalo junto con tus otros datos, porque no vas a poder verlo de nuevo.
-
-   > 📸 *Captura sugerida: token generado visible en pantalla con el botón de copiar*
 
 > ⚠️ **Importante:** Si cerrás esta página sin copiarlo, tendrás que generar uno nuevo. No hay forma de recuperarlo.
 
@@ -184,11 +162,7 @@ No necesitás instalar ningún programa ni saber programar.
 
 2. Hacé clic en la pestaña **Settings** (es la última pestaña en la barra del repositorio).
 
-   > 📸 *Captura sugerida: barra de pestañas del repositorio con "Settings" al final*
-
 3. En el menú lateral izquierdo, buscá **Secrets and variables** y hacé clic. Después hacé clic en **Actions**.
-
-   > 📸 *Captura sugerida: menú lateral de Settings con "Secrets and variables" > "Actions"*
 
 4. Hacé clic en el botón **New repository secret**.
 
@@ -196,8 +170,6 @@ No necesitás instalar ningún programa ni saber programar.
    - **Name:** `CLOCKIFY_API_KEY`
    - **Secret:** Pegá tu API Key de Clockify (la del Paso 2)
    - Hacé clic en **Add secret**
-
-   > 📸 *Captura sugerida: formulario de nuevo secret con el nombre y valor completados*
 
 6. Hacé clic de nuevo en **New repository secret** y creá el segundo:
    - **Name:** `CLOCKIFY_WORKSPACE_ID`
@@ -216,13 +188,9 @@ No necesitás instalar ningún programa ni saber programar.
 
 1. En tu repositorio, andá a **Settings** → buscá **Pages** en el menú lateral izquierdo (está en la sección *Code and automation*).
 
-   > 📸 *Captura sugerida: menú lateral de Settings con "Pages" visible*
-
 2. En la sección **Build and deployment**, bajo **Source**, asegurate de que esté seleccionada la opción **Deploy from a branch**.
 
 3. En el selector de **Branch**, elegí **`main`**. En el selector de carpeta que aparece al lado, elegí **`/docs`**.
-
-   > 📸 *Captura sugerida: sección de configuración de Pages con branch "main" y carpeta "/docs" seleccionados*
 
 4. Hacé clic en **Save**.
 
@@ -248,8 +216,6 @@ La primera vez que abrís tu página web, tenés que ingresar tus credenciales. 
 
 2. Hacé clic en el botón **Configuración** en la esquina superior derecha (tiene un ícono de engranaje ⚙).
 
-   > 📸 *Captura sugerida: página principal de Clockify Manager con el botón "Configuración" destacado*
-
 3. Se abre un panel. Completá los cuatro campos:
 
    | Campo | Qué poner |
@@ -258,8 +224,6 @@ La primera vez que abrís tu página web, tenés que ingresar tus credenciales. 
    | **Repositorio GitHub** | Tu usuario y nombre del repo, así: `TU-USUARIO/clockify_manager` |
    | **Clockify API Key** | Tu API Key de Clockify (la del Paso 2) |
    | **Workspace ID** | Tu Workspace ID (el del Paso 3). Podés dejarlo vacío si no lo tenés. |
-
-   > 📸 *Captura sugerida: panel de configuración con los cuatro campos completados*
 
 4. Hacé clic en **Guardar**.
 
@@ -280,8 +244,6 @@ Una vez configurada, el uso habitual es muy simple:
 - El botón **Mes completo** selecciona todos los días hábiles del mes de un solo clic.
 - El botón **Limpiar selección** deselecciona todo.
 
-> 📸 *Captura sugerida: calendario con varios días seleccionados en azul y los botones "Mes completo" y "Limpiar selección"*
-
 Los feriados nacionales aparecen listados debajo del calendario como referencia.
 
 ### 2. Agregá los proyectos en los que trabajaste
@@ -296,8 +258,6 @@ Los feriados nacionales aparecen listados debajo del calendario como referencia.
 
 6. Repetí para cada proyecto adicional.
 
-> 📸 *Captura sugerida: sección de proyectos con dos tarjetas de proyecto, mostrando los selectores y los botones de ponderación 1-8*
-
 Si preferís ingresar los porcentajes manualmente, hacé clic en **Porcentual** en el selector de modo. El último proyecto calcula automáticamente su porcentaje para que la suma dé siempre 100%.
 
 ### 3. (Opcional) Horas extra después de las 18:00
@@ -309,15 +269,11 @@ Si trabajaste horas extra más allá de tu horario habitual:
 3. En el campo **Hs extra**, indicá cuántas horas extra trabajaste **por día** (máximo 4 por día, de 18:00 a 22:00).
 4. Podés agregar varios bloques de horas extra para diferentes proyectos.
 
-> 📸 *Captura sugerida: sección "Horas Extra" con una tarjeta de proyecto extra y el campo de horas completado*
-
 ### 4. Generá la distribución
 
 Hacé clic en el botón **Generar distribución**.
 
 La parte inferior de la pantalla muestra una grilla con la distribución de horas por día. Cada proyecto tiene un color diferente. Revisá que todo se vea correcto.
-
-> 📸 *Captura sugerida: grilla de distribución diaria con bloques de colores por proyecto*
 
 ### 5. Cargá las horas en Clockify
 
@@ -328,8 +284,6 @@ La parte inferior de la pantalla muestra una grilla con la distribución de hora
    - Si estás cargando **horas extra**, verifica que esos días ya tengan las 8 horas regulares cargadas en Clockify. Si no las tienen, te avisa antes de continuar.
 
 3. El proceso tarda 1–2 minutos. Podés seguir el progreso en GitHub yendo a la pestaña **Actions** de tu repositorio.
-
-> 📸 *Captura sugerida: pestaña Actions de GitHub mostrando el workflow "Log Hours to Clockify" ejecutándose*
 
 > ✅ **¿Cómo sé que funcionó?** El workflow termina con un ícono verde ✅. Si hay un error, aparece un ícono rojo ❌ — en ese caso, hacé clic en el workflow para ver el detalle del error.
 
@@ -345,8 +299,6 @@ La página web obtiene la lista de proyectos desde Clockify a través de un arch
 
 2. En la pantalla de proyectos, buscá el ícono de exportación (generalmente arriba a la derecha, parece una flecha hacia abajo o un ícono de descarga).
 
-   > 📸 *Captura sugerida: pantalla de proyectos de Clockify con el ícono de exportación destacado*
-
 3. Hacé clic en **Export as Excel** (o "Exportar como Excel").
 
 4. Se descarga un archivo `.xlsx` a tu computadora.
@@ -357,8 +309,6 @@ La página web obtiene la lista de proyectos desde Clockify a través de un arch
 
 2. Hacé clic en el botón **Add file** → **Upload files**.
 
-   > 📸 *Captura sugerida: repositorio en GitHub con el botón "Add file" desplegado*
-
 3. Arrastrá el archivo descargado al área de carga, **o** hacé clic en *choose your files* para buscarlo en tu computadora.
 
 4. **Importante:** Antes de subir, renombrá el archivo a exactamente **`projects.xlsx`** (en minúsculas, sin espacios). Si el archivo tiene otro nombre, el proceso automático no se activa.
@@ -366,8 +316,6 @@ La página web obtiene la lista de proyectos desde Clockify a través de un arch
    > 💡 **¿Cómo renombrar?** En Windows: clic derecho sobre el archivo → Cambiar nombre. En Mac: doble clic sobre el nombre del archivo.
 
 5. Una vez cargado, bajá y hacé clic en **Commit changes** → **Commit directly to the `main` branch** → **Commit changes**.
-
-   > 📸 *Captura sugerida: pantalla de commit con el botón "Commit changes" destacado*
 
 6. GitHub ejecuta automáticamente un proceso que convierte el Excel a un formato que entiende la página web. Tarda 1–2 minutos.
 
