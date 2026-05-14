@@ -33,6 +33,23 @@
             --shadow-lg:     0 8px 32px rgba(0,0,0,0.14), 0 0 1px rgba(0,0,0,0.06);
         }
 
+        html[data-theme="dark"] {
+            --bg:            #0d0d14;
+            --card:          #17171f;
+            --border:        #2a2a38;
+            --border-hover:  #44445a;
+            --text:          #e2e2f0;
+            --text-2:        #9090b0;
+            --text-3:        #55556a;
+            --primary-light: #012840;
+            --success-bg:    #0d2e18;
+            --danger-bg:     #2e0d0d;
+            --warn-bg:       #2e2008;
+            --shadow-sm:     0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+            --shadow:        0 2px 8px rgba(0,0,0,0.4), 0 0 1px rgba(0,0,0,0.3);
+            --shadow-lg:     0 8px 32px rgba(0,0,0,0.6), 0 0 1px rgba(0,0,0,0.4);
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
 
@@ -90,6 +107,19 @@
             font-family: inherit;
         }
         .nav-config-btn:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.2); }
+        .nav-theme-btn {
+            width: 32px; height: 32px;
+            border-radius: var(--radius);
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.75);
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .15s;
+            flex-shrink: 0;
+        }
+        .nav-theme-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
 
         /* ── Layout ── */
         .layout { display: flex; flex-direction: column; gap: 1rem; padding: 1rem; }
@@ -336,6 +366,7 @@
             width: 100%; padding: 0.48rem 0.75rem;
             border: 1px solid var(--border); border-radius: var(--radius);
             font-size: 0.85rem; font-family: inherit; color: var(--text);
+            background: var(--card);
             outline: none; transition: border-color .12s;
         }
         .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
@@ -405,6 +436,7 @@
         <span class="nav-logo-text">Clockify <span>Manager</span></span>
     </div>
     <div class="nav-spacer"></div>
+    <button class="nav-theme-btn" id="themeBtn" onclick="toggleTheme()" title="Alternar modo oscuro/claro">🌙</button>
     <button class="nav-config-btn" onclick="openConfig()">
         <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
         Configuración
@@ -1434,6 +1466,25 @@ function showToast(msg, type='info') {
     clearTimeout(t._timer);
     t._timer = setTimeout(() => t.style.display='none', 3500);
 }
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
+
+function applyTheme(dark) {
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.getElementById('themeBtn').textContent = dark ? '☀️' : '🌙';
+}
+
+function toggleTheme() {
+    const isDark = document.documentElement.dataset.theme === 'dark';
+    applyTheme(!isDark);
+    localStorage.setItem('theme', !isDark ? 'dark' : 'light');
+}
+
+(function initTheme() {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(saved ? saved === 'dark' : prefersDark);
+})();
 </script>
 </body>
 </html>
