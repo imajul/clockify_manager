@@ -96,3 +96,38 @@ entries:
     tags:
       - "Gestion de Ingenieria"
     billable: true
+  - date: "2026-06-01"
+    start: "18:00"
+    end: "19:00"
+    project: "PELSA"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-06-02"
+    start: "18:00"
+    end: "19:00"
+    project: "PELSA"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-06-03"
+    start: "18:00"
+    end: "19:00"
+    project: "PELSA"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-06-04"
+    start: "18:00"
+    end: "19:00"
+    project: "PELSA"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-06-05"
+    start: "18:00"
+    end: "19:00"
+    project: "PELSA"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
