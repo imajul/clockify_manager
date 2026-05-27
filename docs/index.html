@@ -519,7 +519,18 @@
                     </div>
                 </div>
                 <div class="legend" id="legend"></div>
-                <div class="hours-summary" id="hoursSummary"></div>
+                <div id="statsWrap" style="display:none">
+                    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:0.75rem">
+                        <div style="flex:1;min-width:180px">
+                            <div class="section-label" style="margin-bottom:0.4rem">Por proyecto</div>
+                            <div class="hours-summary" id="hoursSummary"></div>
+                        </div>
+                        <div style="flex:1;min-width:180px">
+                            <div class="section-label" style="margin-bottom:0.4rem">Por cliente</div>
+                            <div class="hours-summary" id="clientSummary"></div>
+                        </div>
+                    </div>
+                </div>
                 <div class="actions">
                     <span class="actions-hint" id="actionsHint">Generá la distribución para habilitar la carga.</span>
                     <button class="btn btn-success" onclick="loadToClockify()" id="loadBtn" disabled>
@@ -1145,8 +1156,12 @@ function renderGrid(blocks, overtimeBlocks = []) {
     legend.innerHTML = '';
     const summary = document.getElementById('hoursSummary');
     summary.innerHTML = '';
+    const clientSummary = document.getElementById('clientSummary');
+    clientSummary.innerHTML = '';
 
     const regularTotalH = blocks.reduce((s,b) => s + slotHours(b.start, b.end), 0);
+
+    // per-project stats
     projects.forEach((p,i) => {
         if (!p.name) return;
         const color = COLORS[i % COLORS.length];
@@ -1166,6 +1181,22 @@ function renderGrid(blocks, overtimeBlocks = []) {
         legend.innerHTML += `<div class="legend-item"><span class="legend-dot" style="background:${color};background-image:repeating-linear-gradient(45deg,rgba(255,255,255,0.3) 0px,rgba(255,255,255,0.3) 2px,transparent 2px,transparent 6px)"></span>⚡ ${oe.name}${oe.client?' · '+oe.client:''}</div>`;
         summary.innerHTML += `<div class="hours-chip">⚡ ${oe.name}<strong>${hrs}h extra</strong></div>`;
     });
+
+    // per-client stats (regular hours only)
+    const clientMap = {};
+    blocks.forEach(b => {
+        const client = projects[b.pidx]?.client;
+        if (!client) return;
+        clientMap[client] = (clientMap[client] || 0) + slotHours(b.start, b.end);
+    });
+    const clientEntries = Object.entries(clientMap).sort((a,b) => b[1]-a[1]);
+    clientEntries.forEach(([client, hrs]) => {
+        const pct = regularTotalH ? Math.round(hrs / regularTotalH * 100) : 0;
+        clientSummary.innerHTML += `<div class="hours-chip">${client}<strong>${hrs}h</strong><span style="color:var(--text-3);font-size:0.72rem">${pct}%</span></div>`;
+    });
+
+    const statsWrap = document.getElementById('statsWrap');
+    statsWrap.style.display = (regularTotalH > 0 || overtimeBlocks.length > 0) ? '' : 'none';
 }
 
 // ── Clockify API ──────────────────────────────────────────────────────────────
