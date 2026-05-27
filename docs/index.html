@@ -1515,11 +1515,13 @@ function resetAll() {
     addProject();
     addProject();
     renderOvertime();
-    renderGrid([], []);
-    document.getElementById('loadBtn').disabled = true;
-    document.getElementById('actionsHint').textContent = 'Generá la distribución para habilitar la carga.';
+    document.getElementById('legend').innerHTML = '';
+    document.getElementById('hoursSummary').innerHTML = '';
+    document.getElementById('clientSummary').innerHTML = '';
     document.getElementById('statsWrap').style.display = 'none';
     document.getElementById('dayGrid').innerHTML = '<div class="no-dist">Seleccioná días y proyectos, luego generá la distribución.</div>';
+    document.getElementById('loadBtn').disabled = true;
+    document.getElementById('actionsHint').textContent = 'Generá la distribución para habilitar la carga.';
 }
 
 // ── Theme ─────────────────────────────────────────────────────────────────────
