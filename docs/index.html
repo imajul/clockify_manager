@@ -459,6 +459,10 @@
                     <button class="cal-nav" onclick="changeMonth(1)">›</button>
                 </div>
                 <div class="cal-grid" id="calGrid"></div>
+                <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border)">
+                    <div class="cal-title" id="calTitle2" style="font-size:0.85rem;margin-bottom:0.45rem;color:var(--text-2)"></div>
+                    <div class="cal-grid" id="calGrid2"></div>
+                </div>
                 <div class="cal-summary" id="calSummary">Hacé click en los días que trabajaste.</div>
                 <div class="cal-actions">
                     <button class="btn btn-outline btn-sm" style="flex:1" onclick="clearSelection()">Limpiar selección</button>
@@ -700,8 +704,17 @@ function changeMonth(delta) {
 }
 
 function renderCalendar() {
-    document.getElementById('calTitle').textContent = `${MONTH_NAMES[calMonth]} ${calYear}`;
-    const grid = document.getElementById('calGrid');
+    renderMonthGrid(calYear, calMonth, 'calGrid', 'calTitle');
+    let ny = calYear, nm = calMonth + 1;
+    if (nm > 11) { nm = 0; ny++; }
+    renderMonthGrid(ny, nm, 'calGrid2', 'calTitle2');
+    updateCalSummary();
+    renderHolidays();
+}
+
+function renderMonthGrid(year, month, gridId, titleId) {
+    document.getElementById(titleId).textContent = `${MONTH_NAMES[month]} ${year}`;
+    const grid = document.getElementById(gridId);
     grid.innerHTML = '';
 
     DAY_NAMES.forEach(d => {
@@ -711,9 +724,9 @@ function renderCalendar() {
         grid.appendChild(el);
     });
 
-    const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
-    const startOffset = (firstDay === 0 ? 6 : firstDay - 1); // Mon=0
-    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay();
+    const startOffset = (firstDay === 0 ? 6 : firstDay - 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
     const today = fmtDate(new Date());
 
     for (let i = 0; i < startOffset; i++) {
@@ -723,8 +736,8 @@ function renderCalendar() {
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
-        const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const dow = new Date(calYear, calMonth, d).getDay(); // 0=Sun,6=Sat
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const dow = new Date(year, month, d).getDay();
         const isWeekend = dow === 0 || dow === 6;
         const isSelected = selectedDates.includes(dateStr);
         const isToday = dateStr === today;
@@ -738,22 +751,22 @@ function renderCalendar() {
         if (!isWeekend) el.onclick = () => toggleDate(dateStr);
         grid.appendChild(el);
     }
-
-    updateCalSummary();
-    renderHolidays();
 }
 
 function renderHolidays() {
-    const prefix = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
-    const monthHolidays = FERIADOS.filter(f => f.date.startsWith(prefix));
+    let ny = calYear, nm = calMonth + 1;
+    if (nm > 11) { nm = 0; ny++; }
+    const prefix1 = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
+    const prefix2 = `${ny}-${String(nm + 1).padStart(2, '0')}`;
+    const monthHolidays = FERIADOS.filter(f => f.date.startsWith(prefix1) || f.date.startsWith(prefix2));
     const el = document.getElementById('calHolidays');
     if (!monthHolidays.length) { el.innerHTML = ''; return; }
     const DAY_ABBR = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
     el.innerHTML = `<div class="holidays-section">
-        <div class="holidays-title">Feriados del mes</div>
+        <div class="holidays-title">Feriados</div>
         ${monthHolidays.map(f => {
             const d = new Date(f.date + 'T12:00:00');
-            const label = `${DAY_ABBR[d.getDay()]} ${d.getDate()}`;
+            const label = `${DAY_ABBR[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()].slice(0,3)}`;
             return `<div class="holiday-item"><span class="holiday-date">${label}</span><span class="holiday-name">${f.name}</span></div>`;
         }).join('')}
     </div>`;
