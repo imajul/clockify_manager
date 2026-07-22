@@ -1,242 +1,66 @@
 timezone: "America/Argentina/Buenos_Aires"
 entries:
-  - date: "2026-06-18"
+  - date: "2026-06-15"
     start: "09:00"
     end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
+    project: "ALMA SADI"
+    client: "DNN"
     tags:
-      - "Visita a Obra"
+      - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-06-18"
+  - date: "2026-06-15"
     start: "14:00"
+    end: "18:00"
+    project: "ALMA SADI"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-06-16"
+    start: "09:00"
+    end: "13:00"
+    project: "ALMA SADI"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-06-16"
+    start: "14:00"
+    end: "17:00"
+    project: "ALMA SADI"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-06-16"
+    start: "17:00"
     end: "18:00"
     project: "PAMAS"
     client: "DPI"
     tags:
-      - "Visita a Obra"
+      - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-06-19"
+  - date: "2026-06-17"
     start: "09:00"
-    end: "13:00"
+    end: "12:00"
     project: "PAMAS"
     client: "DPI"
     tags:
-      - "Visita a Obra"
+      - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-06-19"
+  - date: "2026-06-17"
+    start: "12:00"
+    end: "13:00"
+    project: "Asistencia General a DNN"
+    client: "DNN"
+    tags:
+      - "Gestion de Ingenieria"
+    billable: true
+  - date: "2026-06-17"
     start: "14:00"
     end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
+    project: "Asistencia General a DNN"
+    client: "DNN"
     tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-22"
-    start: "09:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-22"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-23"
-    start: "09:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-23"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-24"
-    start: "09:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-24"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-25"
-    start: "09:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-25"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-26"
-    start: "09:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-26"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-29"
-    start: "09:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-29"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-30"
-    start: "09:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-06-30"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-07-01"
-    start: "09:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-07-01"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-07-02"
-    start: "09:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-07-02"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-07-03"
-    start: "09:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-07-03"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-07-06"
-    start: "09:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-07-06"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-07-07"
-    start: "09:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-07-07"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-07-08"
-    start: "09:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
-    billable: true
-  - date: "2026-07-08"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Visita a Obra"
+      - "Gestion de Ingenieria"
     billable: true
