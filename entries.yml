@@ -1,6 +1,6 @@
 timezone: "America/Argentina/Buenos_Aires"
 entries:
-  - date: "2026-07-09"
+  - date: "2026-08-13"
     start: "09:00"
     end: "13:00"
     project: "ALMA SADI"
@@ -8,115 +8,11 @@ entries:
     tags:
       - "Gestion de Ingenieria"
     billable: true
-  - date: "2026-07-09"
+  - date: "2026-08-13"
     start: "14:00"
     end: "18:00"
     project: "ALMA SADI"
     client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-07-10"
-    start: "09:00"
-    end: "13:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-07-10"
-    start: "14:00"
-    end: "18:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-07-14"
-    start: "09:00"
-    end: "13:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-07-14"
-    start: "14:00"
-    end: "18:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-07-15"
-    start: "09:00"
-    end: "12:00"
-    project: "ALMA SADI"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-07-15"
-    start: "12:00"
-    end: "13:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-07-15"
-    start: "14:00"
-    end: "18:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-07-16"
-    start: "09:00"
-    end: "11:00"
-    project: "PAMAS"
-    client: "DPI"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-07-16"
-    start: "11:00"
-    end: "13:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-07-16"
-    start: "14:00"
-    end: "18:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-07-17"
-    start: "09:00"
-    end: "13:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-07-17"
-    start: "14:00"
-    end: "15:00"
-    project: "Asistencia General a DNN"
-    client: "DNN"
-    tags:
-      - "Gestion de Ingenieria"
-    billable: true
-  - date: "2026-07-17"
-    start: "15:00"
-    end: "18:00"
-    project: "PATOC"
-    client: "DPI"
     tags:
       - "Gestion de Ingenieria"
     billable: true
