@@ -572,6 +572,14 @@
             <label>Clockify Workspace ID <span style="font-weight:400;color:var(--text-3)">(opcional)</span></label>
             <input type="text" id="clockifyWs" placeholder="Se auto-detecta si está vacío" />
         </div>
+        <div style="border-top:1px solid var(--border);margin:0.9rem 0 1rem;padding-top:0.9rem">
+            <div style="font-size:0.75rem;font-weight:600;color:var(--text-2);margin-bottom:0.5rem">Proyectos</div>
+            <button class="btn btn-outline btn-full" onclick="syncProjectsFromClockify()" id="syncBtn">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
+                Sincronizar proyectos desde Clockify
+            </button>
+            <p class="hint" style="margin-top:0.35rem">Actualiza docs/projects.json en el repositorio con los proyectos activos de tu workspace.</p>
+        </div>
         <div class="modal-actions">
             <button class="btn btn-outline" onclick="closeConfig()">Cancelar</button>
             <button class="btn btn-primary" onclick="saveConfig()">Guardar</button>
@@ -1522,6 +1530,75 @@ function resetAll() {
     document.getElementById('dayGrid').innerHTML = '<div class="no-dist">Seleccioná días y proyectos, luego generá la distribución.</div>';
     document.getElementById('loadBtn').disabled = true;
     document.getElementById('actionsHint').textContent = 'Generá la distribución para habilitar la carga.';
+}
+
+// ── Sync projects from Clockify ───────────────────────────────────────────────
+
+async function syncProjectsFromClockify() {
+    const { token, repo, clockifyKey, clockifyWs } = getConfig();
+    if (!clockifyKey) return showToast('Configurá la Clockify API Key primero.', 'error');
+    if (!token || !repo) return showToast('Configurá el token de GitHub y el repositorio primero.', 'error');
+
+    const btn = document.getElementById('syncBtn');
+    btn.disabled = true;
+    showToast('Obteniendo proyectos de Clockify...', 'info');
+
+    try {
+        const { workspaceId } = await getClockifyContext(clockifyKey, clockifyWs);
+
+        // Fetch clients
+        const clientsRes = await clockifyFetch(clockifyKey,
+            `${CLOCKIFY_API}/workspaces/${workspaceId}/clients?page-size=500`);
+        const clientsList = clientsRes.ok ? await clientsRes.json() : [];
+        const clientMap = {};
+        clientsList.forEach(c => { clientMap[c.id] = c.name; });
+
+        // Fetch active projects (paginate if needed)
+        let allProjects = [], page = 1;
+        while (true) {
+            const res = await clockifyFetch(clockifyKey,
+                `${CLOCKIFY_API}/workspaces/${workspaceId}/projects?page-size=500&page=${page}&archived=false`);
+            if (!res.ok) throw new Error('No se pudo obtener proyectos de Clockify.');
+            const batch = await res.json();
+            allProjects.push(...batch);
+            if (batch.length < 500) break;
+            page++;
+        }
+
+        // Build [{project, client}] — one entry per project×client combination
+        const data = allProjects
+            .map(p => ({ project: p.name, client: p.clientId ? (clientMap[p.clientId] || '') : '' }))
+            .sort((a, b) => a.project.localeCompare(b.project));
+
+        // Commit docs/projects.json to GitHub
+        showToast('Actualizando projects.json en GitHub...', 'info');
+        const content = JSON.stringify(data, null, 2);
+
+        let sha;
+        const getRes = await ghFetch(token, `https://api.github.com/repos/${repo}/contents/docs/projects.json`);
+        if (getRes.ok) sha = (await getRes.json()).sha;
+
+        const putBody = { message: 'Sync projects from Clockify [web]', content: btoa(unescape(encodeURIComponent(content))) };
+        if (sha) putBody.sha = sha;
+
+        const putRes = await ghFetch(token, `https://api.github.com/repos/${repo}/contents/docs/projects.json`, {
+            method: 'PUT', body: JSON.stringify(putBody)
+        });
+        if (!putRes.ok) throw new Error(`Error al guardar: ${(await putRes.json()).message}`);
+
+        // Reload in-memory data
+        PROJECTS_DATA = data;
+        PROJECT_NAMES = [...new Set(data.map(r => r.project))].sort();
+        renderProjects();
+        renderOvertime();
+
+        showToast(`${allProjects.length} proyectos sincronizados.`, 'success');
+        closeConfig();
+    } catch(e) {
+        showToast(e.message, 'error');
+    } finally {
+        btn.disabled = false;
+    }
 }
 
 // ── Theme ─────────────────────────────────────────────────────────────────────
